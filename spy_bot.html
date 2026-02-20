@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Quantique : Modélisation et Trading SPY</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/11.8.0/math.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=JetBrains+Mono:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc; /* Slate 50 */
+            color: #1e293b; /* Slate 800 */
+        }
+
+        h1, h2, h3 {
+            font-family: 'Inter', sans-serif;
+            letter-spacing: -0.025em;
+        }
+
+        .code-font {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        /* Custom Scrollbar for code blocks */
+        .custom-scrollbar::-webkit-scrollbar {
+            height: 8px;
+            width: 8px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #e2e8f0;
+            border-radius: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #94a3b8;
+            border-radius: 4px;
+        }
+
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px;
+            max-height: 400px;
+        }
+
+        .math-formula {
+            font-family: 'Times New Roman', serif;
+            font-style: italic;
+        }
+
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+    </style>
+    <!-- Chosen Palette: Slate (Background), Teal (Quantum/Tech), Indigo (Deep Analysis), Rose/Emerald (Trading Signals) -->
+    <!-- Application Structure Plan:
+         1. Header & Hero: Sets the context of the shift from Classic to Quantum Finance.
+         2. Concept Interactive: "The Schrödinger Market". Interactive visualization of Wave Functions vs. Random Walks.
+         3. The Core Strategy: "Tunnel Effect". A dedicated simulation to understand how prices break resistance levels using quantum probability.
+         4. Bot Architecture Blueprint: Interactive flowchart showing the steps from Data to Signal.
+         5. Implementation Hub: Python code snippets and explanations for the user's specific request to build the bot.
+         6. Live Simulation Dashboard: A mock interface showing the bot "analyzing" SPY data using the discussed metrics.
+    -->
+    <!-- Visualization & Content Choices:
+         - Wave Function Chart (Chart.js): Demonstrates probability density. Goal: Visualizing the core math.
+         - Tunneling Simulator (Chart.js): Visualizes the barrier penetration. Goal: Explaining the trading signal trigger.
+         - Architecture Flow (HTML/Grid): Explains the system design. Goal: Planning.
+         - Code Blocks (HTML/JS):Fulfills the user's request for implementation details.
+    -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+</head>
+<body class="bg-slate-50 text-slate-800">
+
+    <!-- Navigation -->
+    <nav class="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-teal-600 to-indigo-600">
+                        Quantum<span class="font-light text-slate-600">Finance</span>
+                    </span>
+                </div>
+                <div class="hidden md:flex space-x-8 text-sm font-medium text-slate-600">
+                    <button onclick="scrollToSection('intro')" class="hover:text-teal-600 transition">Théorie</button>
+                    <button onclick="scrollToSection('tunnel')" class="hover:text-teal-600 transition">Effet Tunnel</button>
+                    <button onclick="scrollToSection('architecture')" class="hover:text-teal-600 transition">Architecture Bot</button>
+                    <button onclick="scrollToSection('implementation')" class="hover:text-teal-600 transition">Code Python</button>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-xs font-semibold px-2 py-1 bg-slate-100 rounded text-slate-500">v.1.0 Alpha</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header id="intro" class="relative overflow-hidden bg-white border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
+            <div>
+                <div class="inline-block px-3 py-1 mb-4 text-xs font-semibold tracking-wider text-teal-700 uppercase bg-teal-50 rounded-full border border-teal-100">
+                    Basé sur le rapport de recherche
+                </div>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight mb-6">
+                    Au-delà de Black-Scholes : <br>
+                    <span class="text-teal-600">L'Approche Quantique</span>
+                </h1>
+                <p class="text-lg text-slate-600 mb-8 leading-relaxed">
+                    Les modèles classiques échouent à prédire les krachs et les sauts de volatilité. Ce rapport explore comment l'équation de Schrödinger et l'effet tunnel peuvent modéliser la dynamique du S&P 500 (SPY) pour anticiper les ruptures de marché.
+                </p>
+                <div class="flex flex-wrap gap-4">
+                    <button onclick="scrollToSection('tunnel')" class="px-6 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition shadow-lg shadow-teal-600/20">
+                        Explorer l'Effet Tunnel
+                    </button>
+                    <button onclick="scrollToSection('implementation')" class="px-6 py-3 bg-white text-slate-700 border border-slate-300 font-medium rounded-lg hover:bg-slate-50 transition">
+                        Voir le Code Python
+                    </button>
+                </div>
+            </div>
+            <div class="relative bg-slate-50 rounded-2xl p-6 border border-slate-200 shadow-inner">
+                <h3 class="text-sm font-semibold text-slate-500 mb-4 uppercase tracking-wide">Comparaison de Modèles</h3>
+                <!-- Conceptual Comparison Chart -->
+                <div class="chart-container h-64">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+                <p class="text-xs text-center text-slate-400 mt-2">Le modèle quantique capture mieux les "queues épaisses" (événements extrêmes) que la distribution normale classique.</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 space-y-24">
+
+        <!-- Section 1: Theory & Schrodinger -->
+        <section class="grid md:grid-cols-12 gap-12">
+            <div class="md:col-span-4 space-y-6">
+                <h2 class="text-3xl font-bold text-slate-900">Le Formalisme de Schrödinger</h2>
+                <p class="text-slate-600">
+                    En finance quantique, le prix d'un actif n'est pas un point précis, mais une <strong>fonction d'onde de probabilité</strong> $\psi(x,t)$.
+                </p>
+                <div class="bg-slate-100 p-4 rounded-lg border-l-4 border-teal-500">
+                    <p class="math-formula text-lg text-slate-800">
+                        iℏ ∂ψ/∂t = [ -ℏ²/2m ∂²/∂x² + V(x) ] ψ
+                    </p>
+                </div>
+                <ul class="space-y-3 text-sm text-slate-600">
+                    <li class="flex gap-2">
+                        <span class="font-bold text-teal-600">x :</span> Le prix (souvent log-prix).
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="font-bold text-teal-600">m (Masse) :</span> Inversement proportionnelle à la volatilité ($\sigma$). Une forte volatilité = particule légère (bouge vite).
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="font-bold text-teal-600">V(x) (Potentiel) :</span> Les forces du marché (support, résistance, sentiment).
+                    </li>
+                </ul>
+                <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-100 text-sm text-yellow-800">
+                    <strong>Insight Clé :</strong> Contrairement à la marche aléatoire, l'équation de Schrödinger introduit une dynamique d'interférence et de conservation de l'information.
+                </div>
+            </div>
+
+            <div class="md:col-span-8 bg-white p-6 rounded-2xl border border-slate-200 shadow-sm">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="font-bold text-slate-800">Visualisation de la Fonction d'Onde</h3>
+                    <div class="flex gap-4">
+                        <label class="text-xs text-slate-500 flex flex-col">
+                            Volatilité (1/m)
+                            <input type="range" id="volatilitySlider" min="1" max="100" value="50" class="accent-teal-600 cursor-pointer">
+                        </label>
+                    </div>
+                </div>
+                <div class="chart-container">
+                    <canvas id="waveFunctionChart"></canvas>
+                </div>
+                <p class="text-sm text-slate-500 mt-4 text-center">
+                    Ajustez la volatilité pour voir comment la distribution de probabilité du prix s'élargit (incertitude) ou se concentre.
+                </p>
+            </div>
+        </section>
+
+        <!-- Section 2: Tunnel Effect (The Strategy) -->
+        <section id="tunnel" class="scroll-mt-24">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+                <h2 class="text-3xl font-bold text-slate-900 mb-4">L'Effet Tunnel : Prédire les Breakouts</h2>
+                <p class="text-slate-600">
+                    En mécanique classique, une bille ne peut pas traverser un mur plus haut que son énergie. En quantique, il existe une probabilité non nulle qu'elle traverse : c'est l'<strong>effet tunnel</strong>. En trading, cela correspond à un prix traversant un niveau de résistance solide.
+                </p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <!-- Simulator Controls -->
+                <div class="bg-indigo-900 text-white p-8 rounded-2xl shadow-xl">
+                    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                        Simulateur de Signal
+                    </h3>
+
+                    <div class="space-y-6">
+                        <div>
+                            <label class="flex justify-between text-sm font-medium text-indigo-200 mb-2">
+                                Force de la Résistance (Hauteur du Mur V)
+                                <span id="barrierVal">Haute</span>
+                            </label>
+                            <input type="range" id="barrierHeight" min="10" max="100" value="80" class="w-full h-2 bg-indigo-700 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <div>
+                            <label class="flex justify-between text-sm font-medium text-indigo-200 mb-2">
+                                Momentum du Marché (Énergie E)
+                                <span id="energyVal">Moyen</span>
+                            </label>
+                            <input type="range" id="energyLevel" min="10" max="100" value="40" class="w-full h-2 bg-indigo-700 rounded-lg appearance-none cursor-pointer">
+                        </div>
+
+                        <div class="pt-6 border-t border-indigo-700/50">
+                            <div class="flex justify-between items-center mb-2">
+                                <span class="text-sm text-indigo-300">Probabilité de Transmission (T)</span>
+                                <span class="text-2xl font-bold text-white" id="tunnelProb">0.00%</span>
+                            </div>
+                            <div class="w-full bg-indigo-800 rounded-full h-2.5">
+                                <div id="probBar" class="bg-green-400 h-2.5 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                        </div>
+
+                        <div id="signalOutput" class="p-4 rounded-lg bg-indigo-800/50 border border-indigo-700 text-center font-mono text-sm">
+                            ATTENTE DE SIGNAL...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Visualization -->
+                <div class="bg-white p-2 rounded-2xl border border-slate-200 shadow-lg">
+                    <div class="chart-container h-80">
+                        <canvas id="tunnelChart"></canvas>
+                    </div>
+                    <div class="grid grid-cols-3 gap-2 text-center mt-4">
+                        <div class="p-2 bg-slate-50 rounded text-xs">
+                            <div class="font-bold text-slate-700">Zone Classique</div>
+                            <div class="text-slate-500">Prix < Résistance</div>
+                        </div>
+                        <div class="p-2 bg-rose-50 rounded text-xs border border-rose-100">
+                            <div class="font-bold text-rose-700">Barrière (V)</div>
+                            <div class="text-rose-500">Zone Interdite</div>
+                        </div>
+                        <div class="p-2 bg-green-50 rounded text-xs border border-green-100">
+                            <div class="font-bold text-green-700">Zone Tunnel</div>
+                            <div class="text-green-500">Breakout Confirmé</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 3: Bot Architecture (Plan) -->
+        <section id="architecture" class="scroll-mt-24 border-t border-slate-200 pt-16">
+            <h2 class="text-3xl font-bold text-slate-900 mb-8">Architecture du Bot de Trading</h2>
+            <p class="text-slate-600 mb-8 max-w-3xl">
+                Le plan architectural pour implémenter ce système se divise en quatre modules distincts. Cliquez sur chaque module pour voir les détails techniques.
+            </p>
+
+            <div class="grid md:grid-cols-4 gap-4 mb-8">
+                <button onclick="showModule('data')" class="arch-btn active p-4 rounded-xl border-2 border-teal-500 bg-teal-50 text-left transition hover:shadow-md">
+                    <div class="text-xs font-bold text-teal-600 uppercase mb-1">Module 1</div>
+                    <div class="font-bold text-slate-800">Acquisition de Données</div>
+                </button>
+                <button onclick="showModule('potential')" class="arch-btn p-4 rounded-xl border-2 border-transparent bg-white hover:border-slate-300 text-left transition hover:shadow-md">
+                    <div class="text-xs font-bold text-slate-500 uppercase mb-1">Module 2</div>
+                    <div class="font-bold text-slate-800">Modélisation du Potentiel V(x)</div>
+                </button>
+                <button onclick="showModule('solver')" class="arch-btn p-4 rounded-xl border-2 border-transparent bg-white hover:border-slate-300 text-left transition hover:shadow-md">
+                    <div class="text-xs font-bold text-slate-500 uppercase mb-1">Module 3</div>
+                    <div class="font-bold text-slate-800">Solveur Schrödinger</div>
+                </button>
+                <button onclick="showModule('decision')" class="arch-btn p-4 rounded-xl border-2 border-transparent bg-white hover:border-slate-300 text-left transition hover:shadow-md">
+                    <div class="text-xs font-bold text-slate-500 uppercase mb-1">Module 4</div>
+                    <div class="font-bold text-slate-800">Moteur de Décision</div>
+                </button>
+            </div>
+
+            <div id="moduleContent" class="bg-white rounded-2xl p-8 border border-slate-200 shadow-sm min-h-[300px]">
+                <!-- Dynamic Content Loaded via JS -->
+                <div id="content-data" class="module-detail">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4">Module 1 : Acquisition & Prétraitement</h3>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <ul class="space-y-3 text-slate-600 text-sm">
+                                <li class="flex items-start gap-2"><span class="text-teal-500">✓</span> <strong>Source :</strong> API yfinance ou Alpha Vantage pour récupérer les données OHLCV du SPY (S&P 500 ETF).</li>
+                                <li class="flex items-start gap-2"><span class="text-teal-500">✓</span> <strong>Transformation :</strong> Calcul des rendements logarithmiques $r_t = \ln(P_t / P_{t-1})$.</li>
+                                <li class="flex items-start gap-2"><span class="text-teal-500">✓</span> <strong>Fenêtrage :</strong> Utilisation de fenêtres glissantes (ex: 20 jours) pour calibrer la volatilité locale.</li>
+                                <li class="flex items-start gap-2"><span class="text-teal-500">✓</span> <strong>Normalisation :</strong> Les prix doivent être mappés sur une grille spatiale discrète $x$ pour l'équation.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-900 rounded-lg p-4 overflow-hidden">
+<pre class="text-xs text-green-400 code-font overflow-x-auto custom-scrollbar">
+import yfinance as yf
+import numpy as np
+
+def get_market_data(ticker="SPY", period="2y"):
+    data = yf.download(ticker, period=period)
+    # Calcul log returns
+    data['Log_Ret'] = np.log(data['Close'] / data['Close'].shift(1))
+    # Volatilité roulante (proxy pour la masse)
+    data['Volatility'] = data['Log_Ret'].rolling(window=20).std()
+    return data.dropna()
+</pre>
+                        </div>
+                    </div>
+                </div>
+                <!-- Other modules hidden by default -->
+                <div id="content-potential" class="module-detail hidden">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4">Module 2 : Construction du Potentiel V(x)</h3>
+                    <p class="text-slate-600 mb-4">Le potentiel $V(x)$ représente le "paysage" dans lequel le prix évolue. Les niveaux de support et résistance créent des "murs".</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div>
+                            <p class="text-sm text-slate-600 mb-2"><strong>Stratégie :</strong></p>
+                            <ul class="list-disc pl-5 text-sm text-slate-600 space-y-2">
+                                <li>Identifier les pics de volume (Volume Profile).</li>
+                                <li>Utiliser les moyennes mobiles ou les Bandes de Bollinger comme puits de potentiel quadratique.</li>
+                                <li>Inverser la densité de probabilité historique : $V(x) \propto - \ln(P_{hist}(x))$.</li>
+                            </ul>
+                        </div>
+                        <div class="bg-slate-900 rounded-lg p-4 overflow-hidden">
+<pre class="text-xs text-green-400 code-font overflow-x-auto custom-scrollbar">
+def construct_potential(prices, bins=100):
+    # Création d'un histogramme de prix (Volume Profile simple)
+    hist, bin_edges = np.histogram(prices, bins=bins, density=True)
+
+    # Le potentiel est inversement lié à la probabilité historique
+    # V(x) élevé là où le prix va rarement
+    potential = -np.log(hist + 1e-10) # évite log(0)
+
+    # Lissage du potentiel
+    return smooth_signal(potential)
+</pre>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="content-solver" class="module-detail hidden">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4">Module 3 : Solveur Numérique (FDM)</h3>
+                    <p class="text-slate-600 mb-4">Résolution de l'équation de Schrödinger indépendante du temps (TISE) ou dépendante (TDSE) via la méthode des différences finies.</p>
+                    <div class="bg-slate-900 rounded-lg p-4 overflow-hidden mb-4">
+<pre class="text-xs text-green-400 code-font overflow-x-auto custom-scrollbar">
+from scipy.sparse import diags
+from scipy.sparse.linalg import eigs
+
+def solve_schrodinger(potential, mass=1.0, dx=0.1):
+    N = len(potential)
+
+    # Construction de l'Hamiltonien (Matrice Tridiagonale)
+    # Terme cinétique (-h^2 / 2m * d^2/dx^2)
+    k = -1 / (2 * mass * dx**2)
+    main_diag = potential + 2/ (2 * mass * dx**2)
+    off_diag = k * np.ones(N-1)
+
+    H = diags([off_diag, main_diag, off_diag], [-1, 0, 1])
+
+    # Calcul des valeurs propres (Énergies) et vecteurs propres (Psi)
+    energies, wavefunctions = eigs(H, k=5, which='SR') # 'SR' = Smallest Real part
+
+    return energies, wavefunctions
+</pre>
+                    </div>
+                </div>
+
+                <div id="content-decision" class="module-detail hidden">
+                    <h3 class="text-xl font-bold text-slate-900 mb-4">Module 4 : Moteur de Signal (Effet Tunnel)</h3>
+                    <p class="text-slate-600 mb-4">Génération des ordres d'achat/vente basés sur le coefficient de transmission $T$.</p>
+                    <div class="grid md:grid-cols-2 gap-8">
+                        <div class="space-y-4">
+                            <div class="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <strong class="text-green-800 text-sm">Signal ACHAT (Long)</strong>
+                                <p class="text-xs text-green-700">Déclenché si le prix est sous une résistance MAIS que la probabilité de tunnel $T > 50\%$ et que le momentum quantique est positif.</p>
+                            </div>
+                            <div class="p-3 bg-rose-50 border border-rose-200 rounded-lg">
+                                <strong class="text-rose-800 text-sm">Signal VENTE (Short)</strong>
+                                <p class="text-xs text-rose-700">Déclenché si le prix est sur un support MAIS que la probabilité de chute (tunnel vers le bas) est élevée.</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-900 rounded-lg p-4 overflow-hidden flex items-center">
+<pre class="text-xs text-green-400 code-font overflow-x-auto custom-scrollbar">
+def generate_signal(transmission_prob, trend_momentum):
+    THRESHOLD = 0.65
+
+    if transmission_prob > THRESHOLD and trend_momentum > 0:
+        return "BUY_BREAKOUT"
+    elif transmission_prob > THRESHOLD and trend_momentum < 0:
+        return "SELL_BREAKDOWN"
+    else:
+        return "HOLD"
+</pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 4: Full Python Implementation View -->
+        <section id="implementation" class="scroll-mt-24">
+            <div class="bg-slate-900 rounded-2xl shadow-2xl overflow-hidden border border-slate-700">
+                <div class="bg-slate-800 px-6 py-4 flex justify-between items-center border-b border-slate-700">
+                    <div class="flex items-center gap-3">
+                        <div class="flex gap-1.5">
+                            <div class="w-3 h-3 rounded-full bg-red-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+                            <div class="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <span class="text-slate-400 text-sm font-mono ml-2">quantum_bot_main.py</span>
+                    </div>
+                    <button class="text-xs bg-slate-700 hover:bg-slate-600 text-white px-3 py-1 rounded transition" onclick="copyCode()">Copier le Code</button>
+                </div>
+                <div class="p-6 overflow-x-auto">
+<pre id="fullCode" class="code-font text-sm text-slate-300 leading-relaxed custom-scrollbar">
+import numpy as np
+import pandas as pd
+import scipy.sparse as sparse
+from scipy.sparse.linalg import eigs
+
+class QuantumFinanceBot:
+    def __init__(self, ticker="SPY"):
+        self.ticker = ticker
+        self.hbar = 1.0  # Planck constant normalisée
+        self.mass = 1.0  # Masse effective par défaut
+
+    def prepare_data(self, prices):
+        """Transforme les prix en log-returns et normalise"""
+        log_ret = np.log(prices / prices.shift(1)).dropna()
+        self.volatility = log_ret.rolling(20).std().iloc[-1]
+        # La masse est inversement proportionnelle à la volatilité²
+        self.mass = 1.0 / (self.volatility ** 2)
+        return log_ret
+
+    def build_hamiltonian(self, potential_barrier, n_points=100):
+        """Construit la matrice Hamiltonienne H = T + V"""
+        dx = 1.0 / n_points
+        diag_potential = potential_barrier
+
+        # Terme cinétique (Laplacien discret)
+        # -h² / 2m * (d²psi / dx²)
+        kinetic_factor = - (self.hbar**2) / (2 * self.mass * dx**2)
+
+        # Diagonale principale : V(x) - 2 * facteur cinétique
+        main_diag = diag_potential - 2 * kinetic_factor
+
+        # Diagonales secondaires : facteur cinétique
+        off_diag = kinetic_factor * np.ones(n_points - 1)
+
+        # Matrice clairsemée
+        H = sparse.diags([off_diag, main_diag, off_diag], [-1, 0, 1])
+        return H
+
+    def calculate_transmission(self, energy, barrier_height, width):
+        """Formule analytique de l'effet tunnel pour barrière rectangulaire"""
+        # T approx = exp(-2 * K * L)
+        # K = sqrt(2m(V-E)) / hbar
+        if energy > barrier_height:
+            return 1.0 # Transmission classique
+
+        kappa = np.sqrt(2 * self.mass * (barrier_height - energy)) / self.hbar
+        transmission = np.exp(-2 * kappa * width)
+        return transmission
+
+    def analyze_market(self, current_price, resistance_level, market_momentum):
+        """Fonction principale de décision"""
+        # Énergie cinétique du marché ~ momentum²
+        energy = market_momentum ** 2
+
+        # Hauteur de barrière ~ (Résistance - Prix Actuel)
+        barrier_height = (resistance_level - current_price) * 10
+
+        prob = self.calculate_transmission(energy, barrier_height, width=0.5)
+
+        print(f"Probabilité de Tunneling (Breakout) : {prob:.2%}")
+
+        if prob > 0.6:
+            return "SIGNAL: ACHAT (Breakout Imminent)"
+        elif prob < 0.1:
+            return "SIGNAL: REJET (Rebond Baissier)"
+        else:
+            return "SIGNAL: NEUTRE"
+
+# --- Simulation ---
+# bot = QuantumFinanceBot("SPY")
+# signal = bot.analyze_market(current_price=450, resistance_level=455, market_momentum=0.8)
+</pre>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="border-t border-slate-200 mt-24 py-12 bg-white">
+            <div class="max-w-7xl mx-auto px-4 text-center">
+                <p class="text-slate-500 text-sm">
+                    Généré par Canvas Create Webapp • Basé sur l'analyse "Finance Quantique : Modélisation et Trading"
+                </p>
+                <p class="text-slate-400 text-xs mt-2">
+                    Avertissement : Ce code et ces analyses sont à but éducatif uniquement. Le trading comporte des risques financiers.
+                </p>
+            </div>
+        </footer>
+
+    </main>
+
+    <script>
+        // --- Navigation Logic ---
+        function scrollToSection(id) {
+            document.getElementById(id).scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // --- Module Architecture Logic ---
+        function showModule(moduleId) {
+            // Update buttons
+            document.querySelectorAll('.arch-btn').forEach(btn => {
+                btn.classList.remove('border-teal-500', 'bg-teal-50');
+                btn.classList.add('border-transparent', 'bg-white');
+            });
+            event.currentTarget.classList.remove('border-transparent', 'bg-white');
+            event.currentTarget.classList.add('border-teal-500', 'bg-teal-50');
+
+            // Update Content
+            document.querySelectorAll('.module-detail').forEach(content => {
+                content.classList.add('hidden');
+            });
+            document.getElementById('content-' + moduleId).classList.remove('hidden');
+        }
+
+        function copyCode() {
+            const code = document.getElementById('fullCode').innerText;
+            navigator.clipboard.writeText(code);
+            alert("Code copié dans le presse-papier !");
+        }
+
+        // --- Chart.js Implementations ---
+
+        // 1. Comparison Chart (Normal vs Fat Tail/Quantum)
+        const ctxComp = document.getElementById('comparisonChart').getContext('2d');
+
+        // Generate Gaussian Data
+        const xValues = Array.from({length: 100}, (_, i) => i - 50);
+        const gaussian = xValues.map(x => (1 / (10 * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow(x / 10, 2)));
+        // Generate "Quantum/Fat Tail" Data (Cauchy-like or broader Gaussian)
+        const quantumDist = xValues.map(x => (1 / (Math.PI * (1 + Math.pow(x / 8, 2)))) * 0.4);
+
+        new Chart(ctxComp, {
+            type: 'line',
+            data: {
+                labels: xValues,
+                datasets: [
+                    {
+                        label: 'Modèle Classique (Normal)',
+                        data: gaussian,
+                        borderColor: '#94a3b8', // slate-400
+                        borderWidth: 2,
+                        fill: false,
+                        pointRadius: 0,
+                        tension: 0.4
+                    },
+                    {
+                        label: 'Modèle Quantique (Queues Épaisses)',
+                        data: quantumDist,
+                        borderColor: '#0d9488', // teal-600
+                        backgroundColor: 'rgba(13, 148, 136, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        pointRadius: 0,
+                        tension: 0.4
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: true, position: 'bottom' } },
+                scales: { x: { display: false }, y: { display: false } },
+                interaction: { intersect: false, mode: 'index' }
+            }
+        });
+
+        // 2. Wave Function Interactive Chart
+        const ctxWave = document.getElementById('waveFunctionChart').getContext('2d');
+        let volatility = 50;
+
+        function generateWaveData(vol) {
+            // Higher Volatility = Lower Mass = Wider Spread (More uncertainty)
+            // Sigma in Gaussian ~ Volatility
+            const sigma = vol / 5;
+            return xValues.map(x => (1 / (sigma * Math.sqrt(2 * Math.PI))) * Math.exp(-0.5 * Math.pow(x / sigma, 2)));
+        }
+
+        const waveChart = new Chart(ctxWave, {
+            type: 'line',
+            data: {
+                labels: xValues,
+                datasets: [{
+                    label: 'Densité de Probabilité du Prix | ψ(x)|²',
+                    data: generateWaveData(50),
+                    borderColor: '#4f46e5', // indigo-600
+                    backgroundColor: 'rgba(79, 70, 229, 0.2)',
+                    borderWidth: 2,
+                    fill: true,
+                    pointRadius: 0,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { display: false, min: 0, max: 0.2 }, // Fixed scale to see changes
+                    x: { display: false }
+                },
+                animation: { duration: 0 } // Fast updates
+            }
+        });
+
+        document.getElementById('volatilitySlider').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            waveChart.data.datasets[0].data = generateWaveData(val);
+            waveChart.update();
+        });
+
+        // 3. Tunnel Effect Simulator (The "Game")
+        const ctxTunnel = document.getElementById('tunnelChart').getContext('2d');
+
+        // Initial State
+        let barrierH = 80; // V0
+        let particleE = 40; // E
+        let barrierWidth = 10;
+
+        function calculateTunnelProb(E, V, W) {
+            // Simplified Tunneling Physics: T ~ exp(-2 * W * sqrt(2m(V-E))/hbar)
+            if (E >= V) return 1.0;
+            const diff = V - E;
+            // Constants assumed = 1 for visualization
+            const k = Math.sqrt(diff) * 0.5;
+            return Math.exp(-2 * k * (W/5)); // scaled
+        }
+
+        // Draw the visual landscape
+        function generateLandscape(V, E) {
+            const dataV = []; // Potential Landscape
+            const dataE = []; // Particle Energy Line
+
+            xValues.forEach((x, i) => {
+                // Barrier from index 60 to 70 (x=10 to 20 approx)
+                if (i >= 60 && i <= 70) {
+                    dataV.push(V / 100); // Scale 0-1
+                } else {
+                    dataV.push(0);
+                }
+                dataE.push(E / 100); // Scale 0-1
+            });
+            return { dataV, dataE };
+        }
+
+        const tunnelChart = new Chart(ctxTunnel, {
+            type: 'line',
+            data: {
+                labels: xValues,
+                datasets: [
+                    {
+                        label: 'Barrière de Résistance V(x)',
+                        data: generateLandscape(80, 40).dataV,
+                        borderColor: '#e11d48', // rose-600
+                        backgroundColor: 'rgba(225, 29, 72, 0.2)',
+                        borderWidth: 2,
+                        fill: true,
+                        pointRadius: 0,
+                        stepped: true
+                    },
+                    {
+                        label: 'Énergie du Marché (Prix) E',
+                        data: generateLandscape(80, 40).dataE,
+                        borderColor: '#22c55e', // green-500
+                        borderWidth: 2,
+                        borderDash: [5, 5],
+                        fill: false,
+                        pointRadius: 0
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: { beginAtZero: true, max: 1.2, display: false },
+                    x: { display: false }
+                },
+                elements: { point: { radius: 0 } }
+            }
+        });
+
+        function updateTunnelSim() {
+            const V = parseInt(document.getElementById('barrierHeight').value);
+            const E = parseInt(document.getElementById('energyLevel').value);
+
+            // Update Text Labels
+            document.getElementById('barrierVal').innerText = V > 70 ? "Forte (Mur)" : (V > 40 ? "Moyenne" : "Faible");
+            document.getElementById('energyVal').innerText = E > 70 ? "Élevé (FOMO)" : (E > 40 ? "Moyen" : "Faible");
+
+            // Calculate Prob
+            const prob = calculateTunnelProb(E, V, barrierWidth);
+            const probPct = (prob * 100).toFixed(2);
+
+            document.getElementById('tunnelProb').innerText = probPct + "%";
+            document.getElementById('probBar').style.width = probPct + "%";
+
+            // Update Signal Text
+            const signalDiv = document.getElementById('signalOutput');
+            if (prob > 0.6) {
+                signalDiv.innerHTML = `<span class="text-green-400 font-bold">SIGNAL D'ACHAT</span><br>Rupture par Effet Tunnel Probable`;
+                signalDiv.className = "p-4 rounded-lg bg-green-900/30 border border-green-500 text-center font-mono text-sm transition-colors";
+            } else if (prob < 0.1) {
+                signalDiv.innerHTML = `<span class="text-rose-400 font-bold">SIGNAL DE REJET</span><br>Rebond sur Résistance (Short)`;
+                signalDiv.className = "p-4 rounded-lg bg-rose-900/30 border border-rose-500 text-center font-mono text-sm transition-colors";
+            } else {
+                signalDiv.innerHTML = `<span class="text-yellow-400 font-bold">NEUTRE</span><br>Accumulation / Incertitude`;
+                signalDiv.className = "p-4 rounded-lg bg-yellow-900/30 border border-yellow-500 text-center font-mono text-sm transition-colors";
+            }
+
+            // Update Chart
+            const landscape = generateLandscape(V, E);
+            tunnelChart.data.datasets[0].data = landscape.dataV;
+            tunnelChart.data.datasets[1].data = landscape.dataE;
+            tunnelChart.update();
+        }
+
+        // Listeners
+        document.getElementById('barrierHeight').addEventListener('input', updateTunnelSim);
+        document.getElementById('energyLevel').addEventListener('input', updateTunnelSim);
+
+        // Init
+        updateTunnelSim();
+
+    </script>
+</body>
+</html>
