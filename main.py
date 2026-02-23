@@ -29,14 +29,8 @@ def create_initial_wave_packet(x, x_0, v_0, k_0):
 
 
 def build_hamiltonian(N, dx, mass, x, resistance_price, V_0, barrier_thickness):
-    # Création de la matrice pour la dérivé seconde par différence finie (Matrice de transformation)
-    main_diag = -2 * np.ones(N)
-    off_diag = np.ones(N - 1)
-    M_T = (np.diag(main_diag) + np.diag(off_diag, k=1) + np.diag(off_diag, k=-1))
-    K = -1 / (2 * mass * dx ** 2) * M_T  # Calcul de l'énergie cinétique
-
-    # Création de la matrice de potentiel
-    potential_vector = np.zeros(N)
+    K_coeff = -1 / (2 * mass * dx ** 2)   # Calcul du coefficient de l'énergie cinétique
+    potential_vector = np.zeros(N) # Création du vecteur de potentiel
     for price, thick in zip(resistance_price, barrier_thickness): # Permet de mettre plusieurs barrières
         log_start = np.log(price) # Emplacement de la résistance
         log_end = np.log(price + thick) # Fin de la résistance
@@ -45,33 +39,27 @@ def build_hamiltonian(N, dx, mass, x, resistance_price, V_0, barrier_thickness):
         L_point = max(1,L_point) # Protection contre une épaisseur de moins qu'un point
         idx = (np.abs(x - log_start)).argmin()  # Index de la barrière
         potential_vector[idx: idx + L_point] = V_0  # Création de la barrière
-    V = np.diag(potential_vector)  # Matrice de potentiel
-
-    H = K + V  # Création du Hamiltonien
-    return H, potential_vector
+    return K_coeff, potential_vector
 
 
-def run_simulation_and_animate(psi, H, dt, S, x, potential_vector, steps_per_frame=10):
+def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_per_frame=10):
     # Préparation pour la simulation (logique de Crank-Nicolson)
-    N = H.shape[0]
-    M_L = np.eye(N) + (1j * dt / 2) * H
-    M_R = np.eye(N) - (1j * dt / 2) * H
-    # Matrice en bande pour sauver de la RAM
-    diag_main = np.diag(M_L)
-    diag_up = np.diag(M_L, k=1)
-    diag_down = np.diag(M_L, k=-1)
-    M_L_banded = np.zeros((3, len(psi)), dtype=complex)
-    M_L_banded[0, 1:] = diag_up
-    M_L_banded[1, :] = diag_main
-    M_L_banded[2, :-1] = diag_down
+    alpha = 1j * dt / 2
+    H_diag = potential_vector + K_coeff*(-2) # Diagonale principal du Hamiltonian
+    diag_main_ML = 1+alpha*H_diag # Diagonale principale de la matrice de gauche
+    diag_off_ML = alpha * K_coeff # Diagonales secondaires de la matrice de gauche
+    M_L_banded = np.zeros((3, len(psi)), dtype=complex) # Créationd de la matrice en bande pour sauver de la RAM
+    M_L_banded[0, 1:] = diag_off_ML # Ajout de la diagonale secondaire supérieure
+    M_L_banded[1, :] = diag_main_ML # Ajout de la diagonale principale
+    M_L_banded[2, :-1] = diag_off_ML # Ajout de la diagonale secondaire inférieure
 
     #Configuration du graphique
     plt.ion()  # Activer le mode interactif
     fig, ax = plt.subplots(figsize=(10, 6))
 
-    prob_initial = np.abs(psi) ** 2
-    prob_line, = ax.plot(x, prob_initial, label="Probabilité du prix (Action)", color="blue")
-    fill_collection = ax.fill_between(x, prob_initial, color="blue", alpha=0.2)
+    prob_initial = np.abs(psi) ** 2 # Calcul de la probabilité
+    prob_line, = ax.plot(x, prob_initial, label="Probabilité du prix (Action)", color="blue") # Courbe de la probabilité
+    fill_collection = ax.fill_between(x, prob_initial, color="blue", alpha=0.2) # Remplissage de l'aire sous la courbe des probabilités
 
     # Normaliser le potentiel une seule fois pour le mettre à l'échelle
     V_norm = potential_vector / (np.max(potential_vector) if np.max(potential_vector) > 0 else 1)
@@ -86,11 +74,15 @@ def run_simulation_and_animate(psi, H, dt, S, x, potential_vector, steps_per_fra
 
     # Boucle de simulation et d'animation
     for i in range(S):
+        # Création des trois diagonales de la matrice résultante du produit scalaire entre psi et M_L
+        term_H_psi = H_diag*psi
+        term_H_psi[1:] += K_coeff * psi[:-1]
+        term_H_psi[:-1] += K_coeff * psi[1:]
         # Fait évoluer la fonction d'onde
-        B = M_R.dot(psi)
+        B = psi - alpha * term_H_psi
         psi = solve_banded((1, 1), M_L_banded, B)
 
-        # Met à jour le graphique toutes les 'steps_per_frame' itérations
+        # Met à jour le graphique toutes les x itérations
         if i % steps_per_frame == 0:
             prob = np.abs(psi) ** 2
             prob_line.set_ydata(prob)
@@ -119,7 +111,7 @@ if __name__ == "__main__":
     time_step = 0.1 #Temps de chaque itération
     num_iterations = 5000  # Nombre total d'itérations
     update_frequency = 1  # Mettre à jour le graphique toutes les x itérations (ralentit le mouvement)
-    num_points = 10000 # Précision du graphique
+    num_points = 30000 # Précision du graphique
     barrier_thickness = [55,5.75] # Différentes épaisseur des barrières en dollars
     potential_strength = 20 # Force de la barrière de potentiel
     resistance_price_val = [140,200] # Différents prix des résistances
@@ -132,9 +124,9 @@ if __name__ == "__main__":
     psi_initial = create_initial_wave_packet(x, x_0, initial_volatility, initial_drift)
 
     # 3. Construction du Hamiltonien
-    H, potential_vector = build_hamiltonian(num_points, dx, mass, x, resistance_price_val, potential_strength,
+    K_coeff, potential_vector = build_hamiltonian(num_points, dx, mass, x, resistance_price_val, potential_strength,
                                             barrier_thickness)
 
     # 4. Lancement de la simulation et de l'animation
-    psi_final = run_simulation_and_animate(psi_initial, H, time_step, num_iterations, x, potential_vector,
+    psi_final = run_simulation_and_animate(psi_initial, K_coeff, time_step, num_iterations, x, potential_vector,
                                            steps_per_frame=update_frequency)
