@@ -17,7 +17,7 @@ def initialize_parameters(N, action):
     x = np.linspace(x_0-0.5, x_0+0.5, N)  # Variation du log prix selon la position initiale
     dx = x[1] - x[0]
     mass = 1 / v_0 ** 2  # Inertie de l'action
-    return x_0, x, dx, mass,k_0,v_0, initial_price
+    return x_0, x, dx, mass, k_0, v_0, initial_price
 
 
 def create_initial_wave_packet(x, x_0, v_0, k_0):
@@ -28,7 +28,7 @@ def create_initial_wave_packet(x, x_0, v_0, k_0):
     return psi
 
 
-def build_hamiltonian(N, dx, mass, x, resistance_price, V_0, L_point):
+def build_hamiltonian(N, dx, mass, x, resistance_price, V_0, barrier_thickness):
     # Création de la matrice pour la dérivé seconde par différence finie (Matrice de transformation)
     main_diag = -2 * np.ones(N)
     off_diag = np.ones(N - 1)
@@ -38,8 +38,12 @@ def build_hamiltonian(N, dx, mass, x, resistance_price, V_0, L_point):
     # Création de la matrice de potentiel
     potential_vector = np.zeros(N)
     for price in resistance_price: # Permet de mettre plusieurs barrières
-        x_res = np.log(price)  # Trouve l'emplacement de la barrière
-        idx = (np.abs(x - x_res)).argmin()  # Index de la barrière
+        log_start = np.log(price) # Emplacement de la résistance
+        log_end = np.log(price + barrier_thickness) # Fin de la résistance
+        delta_x = log_end-log_start # Largeur de la résistance
+        L_point = int(round(delta_x/N)) # Largeur en point sur le graphique de la résistance
+        L_point = max(1,L_point) # Protection contre une épaisseur de moins qu'un point
+        idx = (np.abs(x - log_start)).argmin()  # Index de la barrière
         potential_vector[idx: idx + L_point] = V_0  # Création de la barrière
     V = np.diag(potential_vector)  # Matrice de potentiel
 
@@ -116,9 +120,9 @@ if __name__ == "__main__":
     num_iterations = 5000  # Nombre total d'itérations
     update_frequency = 1  # Mettre à jour le graphique toutes les x itérations (ralentit le mouvement)
     num_points = 10000 # Précision du graphique
-    barrier_thickness = 20 # Épaisseur de la barrière
+    barrier_thickness = 0.75 # Épaisseur de la barrière en dollars
     potential_strength = 20 # Force de la barrière de potentiel
-    resistance_price_val = [100,200] # Doit toujours être une liste
+    resistance_price_val = [140,200] # Doit toujours être une liste
     action = "NVDA" # Nom de l'action qu'on suit
 
     # 1. Initialisation
