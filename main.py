@@ -37,9 +37,9 @@ def build_hamiltonian(N, dx, mass, x, resistance_price, V_0, barrier_thickness):
 
     # Création de la matrice de potentiel
     potential_vector = np.zeros(N)
-    for price in resistance_price: # Permet de mettre plusieurs barrières
+    for price, thick in zip(resistance_price, barrier_thickness): # Permet de mettre plusieurs barrières
         log_start = np.log(price) # Emplacement de la résistance
-        log_end = np.log(price + barrier_thickness) # Fin de la résistance
+        log_end = np.log(price + thick) # Fin de la résistance
         delta_x = log_end-log_start # Largeur de la résistance
         L_point = int(round(delta_x/N)) # Largeur en point sur le graphique de la résistance
         L_point = max(1,L_point) # Protection contre une épaisseur de moins qu'un point
@@ -120,9 +120,9 @@ if __name__ == "__main__":
     num_iterations = 5000  # Nombre total d'itérations
     update_frequency = 1  # Mettre à jour le graphique toutes les x itérations (ralentit le mouvement)
     num_points = 10000 # Précision du graphique
-    barrier_thickness = 0.75 # Épaisseur de la barrière en dollars
+    barrier_thickness = [55,5.75] # Différentes épaisseur des barrières en dollars
     potential_strength = 20 # Force de la barrière de potentiel
-    resistance_price_val = [140,200] # Doit toujours être une liste
+    resistance_price_val = [140,200] # Différents prix des résistances
     action = "NVDA" # Nom de l'action qu'on suit
 
     # 1. Initialisation
