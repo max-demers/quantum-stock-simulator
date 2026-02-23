@@ -31,14 +31,14 @@ def create_initial_wave_packet(x, x_0, v_0, k_0):
 def build_hamiltonian(N, dx, mass, x, resistance_price, V_0, barrier_thickness):
     K_coeff = -1 / (2 * mass * dx ** 2)   # Calcul du coefficient de l'énergie cinétique
     potential_vector = np.zeros(N) # Création du vecteur de potentiel
-    for price, thick in zip(resistance_price, barrier_thickness): # Permet de mettre plusieurs barrières
+    for price, thick, strength in zip(resistance_price, barrier_thickness, V_0): # Permet de mettre plusieurs barrières
         log_start = np.log(price) # Emplacement de la résistance
         log_end = np.log(price + thick) # Fin de la résistance
         delta_x = log_end-log_start # Largeur de la résistance
         L_point = int(round(delta_x/N)) # Largeur en point sur le graphique de la résistance
         L_point = max(1,L_point) # Protection contre une épaisseur de moins qu'un point
         idx = (np.abs(x - log_start)).argmin()  # Index de la barrière
-        potential_vector[idx: idx + L_point] = V_0  # Création de la barrière
+        potential_vector[idx: idx + L_point] = strength  # Création de la barrière
     return K_coeff, potential_vector
 
 
@@ -62,9 +62,10 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
     fill_collection = ax.fill_between(x, prob_initial, color="blue", alpha=0.2) # Remplissage de l'aire sous la courbe des probabilités
 
     # Normaliser le potentiel une seule fois pour le mettre à l'échelle
-    V_norm = potential_vector / (np.max(potential_vector) if np.max(potential_vector) > 0 else 1)
+    V_log = np.log1p(potential_vector) # Utilisation des log pour éviter les grands écarts
+    V_norm = (V_log / np.max(V_log) if np.max(V_log) > 0 else 1)
     # Afficher la barrière de potentiel, mise à l'échelle de la hauteur initiale du graphique
-    potential_line, = ax.plot(x, V_norm * np.max(prob_initial) * 1.2, label="Barrière de potentiel (Résistance)",
+    potential_line, = ax.plot(x, V_norm * np.max(prob_initial), label="Barrière de potentiel (Résistance)",
                               color="red")
 
     ax.set_xlabel("Log(Prix)")
@@ -96,7 +97,7 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
             ax.set_ylim(0, new_ylim_top)
 
             # Mettre à jour la hauteur de la barrière pour qu'elle corresponde à la nouvelle hauteur du graphique
-            potential_line.set_ydata(V_norm * new_ylim_top)
+            potential_line.set_ydata(V_norm * new_ylim_top * 0.95)
 
             plt.draw()
             plt.pause(0.016)  # Ralentit l'animation
@@ -113,7 +114,7 @@ if __name__ == "__main__":
     update_frequency = 1  # Mettre à jour le graphique toutes les x itérations (ralentit le mouvement)
     num_points = 30000 # Précision du graphique
     barrier_thickness = [55,5.75] # Différentes épaisseur des barrières en dollars
-    potential_strength = 20 # Force de la barrière de potentiel
+    potential_strength = [20,100] # Force des barrière de potentiel
     resistance_price_val = [140,200] # Différents prix des résistances
     action = "NVDA" # Nom de l'action qu'on suit
 
