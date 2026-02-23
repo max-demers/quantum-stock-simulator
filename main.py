@@ -4,18 +4,20 @@ import yfinance as yf
 from scipy.linalg import solve_banded
 
 
-def initialize_parameters(price, N, action):
+def initialize_parameters(N, action):
+    ticker = yf.Ticker(action)
+    initial_price = ticker.fast_info["last_price"] # Prix intital de l'action
     df = yf.download(action,period="7d",interval="1h") # Récolte des prix sur l'action choisie
     prices = df['Close'].values.flatten() # On prend seulement la valeur de fermeture puis transforme en vecteur
     log_return = np.diff(np.log(prices)) # Différence entre deux éléments consécutifs
     v_0 = np.std(log_return) # Calcul de l'écart-type (volatilité)
     mu = np.mean(log_return) # Moyenne arithmétique des différences de prix pour trouvée le drift
     k_0 = mu/(v_0**2) # Calcul du drift moyen
-    x_0 = np.log(price)  # Position (x) de l'action
-    x = np.linspace(5.5, 7, N)  # Variation du log prix
+    x_0 = np.log(initial_price)  # Position (x) de l'action
+    x = np.linspace(x_0-0.5, x_0+0.5, N)  # Variation du log prix selon la position initiale
     dx = x[1] - x[0]
     mass = 1 / v_0 ** 2  # Inertie de l'action
-    return x_0, x, dx, mass,k_0,v_0
+    return x_0, x, dx, mass,k_0,v_0, initial_price
 
 
 def create_initial_wave_packet(x, x_0, v_0, k_0):
@@ -113,15 +115,14 @@ if __name__ == "__main__":
     time_step = 0.1 #Temps de chaque itération
     num_iterations = 5000  # Nombre total d'itérations
     update_frequency = 1  # Mettre à jour le graphique toutes les x itérations (ralentit le mouvement)
-    initial_price = 500 # Prix initial
     num_points = 10000 # Précision du graphique
     barrier_thickness = 20 # Épaisseur de la barrière
-    potential_strength = 100 # Force de la barrière de potentiel
-    resistance_price_val = [300,800] # Doit toujours être une liste
+    potential_strength = 20 # Force de la barrière de potentiel
+    resistance_price_val = [100,200] # Doit toujours être une liste
     action = "NVDA" # Nom de l'action qu'on suit
 
     # 1. Initialisation
-    x_0, x, dx, mass,initial_drift,initial_volatility = initialize_parameters(initial_price, num_points, action)
+    x_0, x, dx, mass,initial_drift,initial_volatility, initial_price = initialize_parameters(num_points, action)
 
     # 2. Création de la fonction d'ondes initiale
     psi_initial = create_initial_wave_packet(x, x_0, initial_volatility, initial_drift)
