@@ -142,7 +142,7 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
 
 if __name__ == "__main__":
     time_step = 0.01
-    num_iterations = 5000
+    num_iterations = 50000
     update_frequency = 1
     num_points = 20000
     barrier_thickness = [1.5, 0.75, 1.0, 2.0] 
