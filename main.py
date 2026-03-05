@@ -7,27 +7,27 @@ from scipy.linalg import solve_banded
 def initialize_parameters(N, action, resistance_prices=None):
     ticker = yf.Ticker(action)
     initial_price = ticker.fast_info["last_price"] # Prix intital de l'action
-    df = yf.download(action,period="100d",interval="1h") # Récolte des prix sur l'action choisie
+    df = yf.download(action,period="14d",interval="1h") # Récolte des prix sur l'action choisie
     prices = df['Close'].values.flatten() # On prend seulement les valeurs de fermeture
     log_return = np.diff(np.log(prices)) # Différence entre deux éléments consécutifs
     v_0 = np.std(log_return) # Calcul de l'écart-type (volatilité)
     mu = np.mean(log_return) # Moyenne arithmétique des différences de prix pour trouvée le drift
-    k_0 = mu/(v_0**2) # Calcul du drift moyen
+    k_0 = mu - (v_0**2 /2) # Calcul du drift moyen
     x_0 = np.log(initial_price)  # Position (x) de l'action
 
     # Ajustement de la plage pour inclure les barrières si présentes
     x_min = x_0 - 0.1
     x_max = x_0 + 0.1
-    if resistance_prices: # Permet d'ajuster les limites
+    if resistance_prices:
         max_res = np.log(max(resistance_prices) * 1.05)
         min_res = np.log(min(resistance_prices) * 0.95)
         x_min = min(x_min, min_res)
         x_max = max(x_max, max_res)
 
     x = np.linspace(x_min, x_max, N)  # Variation du log prix
-    dx = x[1] - x[0] # Longueur d'un point
+    dx = x[1] - x[0]
     mass = 1 / v_0 ** 2  # Inertie de l'action
-    return x_0, x, dx, mass, k_0, v_0, initial_price
+    return x_0, x, dx, mass, k_0, v_0, initial_price, mu
 
 
 def create_initial_wave_packet(x, x_0, v_0, k_0):
@@ -52,7 +52,9 @@ def build_hamiltonian(N, dx, mass, x, resistance_price, V_0, barrier_thickness):
     return K_coeff, potential_vector
 
 
-def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_per_frame=10, resistance_price=None, barrier_thickness=None):
+def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_per_frame=10, 
+                               resistance_price=None, barrier_thickness=None, 
+                               v0=0, k0=0, mu=0):
     # Préparation pour la simulation (logique de Crank-Nicolson)
     alpha = 1j * dt / 2
     H_diag = potential_vector + K_coeff*(-2) # Diagonale principal du Hamiltonian
@@ -66,11 +68,11 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
     # Préparation des indices pour le calcul des probabilités de breakout
     breakout_indices = []
     dx = x[1] - x[0]
-    if resistance_price is not None and barrier_thickness is not None: # Si j'ai des valeurs
+    if resistance_price is not None and barrier_thickness is not None:
         for p, t in zip(resistance_price, barrier_thickness):
             log_end = np.log(p + t)
             idx = (np.abs(x - log_end)).argmin()
-            breakout_indices.append(idx) # Création d'une liste des effets tunels
+            breakout_indices.append(idx)
 
     #Configuration du graphique
     plt.ion()  # Activer le mode interactif
@@ -93,10 +95,18 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
     prob_labels = [ax.text(x[idx], 0, "", color="darkred", fontweight="bold", ha="center", fontsize=9) 
                    for idx in breakout_indices]
 
+    # Ajout des paramètres v0 et k0 dans un encadré
+    param_text = (f"Paramètres du marché :\n"
+                  f"Volatilité (v_0): {v0:.2%}\n"
+                  f"Drift (k_0): {k0:.2%}\n"
+                  f"Moyenne (mu): {mu:.2%}")
+    ax.text(0.02, 0.95, param_text, transform=ax.transAxes, fontsize=10,
+            verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
+
     ax.set_xlabel("Log(Prix)")
     ax.set_ylabel("Densité de Probabilité")
     ax.set_title(f"Simulation Quantique de l'Action")
-    ax.legend()
+    ax.legend(loc='upper right')
     ax.grid(alpha=0.3)
 
     # Boucle de simulation et d'animation
@@ -132,7 +142,7 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
                 prob_labels[j].set_position((x[idx], new_ylim_top * 0.75))
 
             plt.draw()
-            plt.pause(0.016)
+            plt.pause(0.05)
 
     plt.ioff()
     plt.show()
@@ -141,17 +151,17 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
 
 
 if __name__ == "__main__":
-    time_step = 0.01
-    num_iterations = 55000
+    time_step = 0.1 # Accélère un peu l'évolution
+    num_iterations = 50000  
     update_frequency = 1
-    num_points = 20000
+    num_points = 50000
     barrier_thickness = [1.5, 0.75, 1.0, 2.0] 
     potential_strength = [200, 120, 160, 400]
     resistance_price_val = [185, 182.5, 177.5, 172] 
     action = "NVDA" 
 
     # 1. Initialisation avec prise en compte des résistances pour la plage
-    x_0, x, dx, mass, initial_drift, initial_volatility, initial_price = initialize_parameters(num_points, action, resistance_price_val)
+    x_0, x, dx, mass, initial_drift, initial_volatility, initial_price, initial_mu = initialize_parameters(num_points, action, resistance_price_val)
 
     # 2. Création de la fonction d'ondes initiale
     psi_initial = create_initial_wave_packet(x, x_0, initial_volatility, initial_drift)
@@ -162,4 +172,5 @@ if __name__ == "__main__":
 
     # 4. Lancement de la simulation et de l'animation avec les nouveaux paramètres
     psi_final = run_simulation_and_animate(psi_initial, K_coeff, time_step, num_iterations, x, potential_vector, 
-                                          update_frequency, resistance_price_val, barrier_thickness)
+                                          update_frequency, resistance_price_val, barrier_thickness,
+                                          v0=initial_volatility, k0=initial_drift, mu=initial_mu)
