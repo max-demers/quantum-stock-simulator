@@ -44,11 +44,27 @@ def build_hamiltonian(N, dx, mass, x, resistance_price, V_0, barrier_thickness):
     for price, thick, strength in zip(resistance_price, barrier_thickness, V_0): # Permet de mettre plusieurs barrières
         log_start = np.log(price) # Emplacement de la résistance
         log_end = np.log(price + thick) # Fin de la résistance
-        delta_x = log_end-log_start # Largeur de la résistance
-        L_point = int(round(delta_x/dx)) # Largeur en point sur le graphique de la résistance
-        L_point = max(1,L_point) # Protection contre une épaisseur de moins qu'un point
-        idx = (np.abs(x - log_start)).argmin()  # Index de la barrière
-        potential_vector[idx: idx + L_point] = strength  # Création de la barrière
+        
+        # On trouve les bornes d'indexation
+        idx_1 = (np.abs(x - log_start)).argmin()
+        idx_2 = (np.abs(x - log_end)).argmin()
+        
+        idx_start = min(idx_1, idx_2)
+        idx_end = max(idx_1, idx_2)
+        L_point = idx_end - idx_start
+        L_point = max(1, L_point)
+        
+        if isinstance(strength, (list, tuple)) and len(strength) == 2:
+            # Si strength est un tuple (V_début, V_fin), on crée une pente linéaire
+            v_at_price, v_at_thick = strength
+            if idx_1 <= idx_2: # thick > 0 : le prix de départ est à gauche
+                vals = np.linspace(v_at_price, v_at_thick, L_point)
+            else: # thick < 0 : le prix de départ est à droite
+                vals = np.linspace(v_at_thick, v_at_price, L_point)
+            potential_vector[idx_start: idx_start + L_point] = vals
+        else:
+            # Sinon on crée une barrière plate classique
+            potential_vector[idx_start: idx_start + L_point] = strength
     return K_coeff, potential_vector
 
 
@@ -155,8 +171,8 @@ if __name__ == "__main__":
     num_iterations = 50000  
     update_frequency = 1
     num_points = 50000
-    barrier_thickness = [1.5, 0.75, 1.0, 2.0] 
-    potential_strength = [200, 120, 160, 400]
+    barrier_thickness = [1.5, 0.75, 1.0, 2.0]
+    potential_strength = [200, 100, 160, 400]
     resistance_price_val = [185, 182.5, 177.5, 172] 
     action = "NVDA" 
 
