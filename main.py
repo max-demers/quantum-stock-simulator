@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import yfinance as yf
 from scipy.linalg import solve_banded
+from datetime import datetime, timedelta
 
 
 def initialize_parameters(N, action, resistance_prices=None):
@@ -119,6 +120,13 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
     ax.text(0.02, 0.95, param_text, transform=ax.transAxes, fontsize=10,
             verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.8))
 
+    # Initialisation du timer
+    start_time = datetime.now()
+    timer_text = ax.text(0.5, 0.95, "", transform=ax.transAxes, fontsize=12,
+                         verticalalignment='top', horizontalalignment='center',
+                         bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
+                         fontweight='bold', color='darkblue')
+
     ax.set_xlabel("Log(Prix)")
     ax.set_ylabel("Densité de Probabilité")
     ax.set_title(f"Simulation Quantique de l'Action")
@@ -137,6 +145,10 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
 
         # Met à jour le graphique toutes les x itérations
         if i % steps_per_frame == 0:
+            # Mise à jour du timer
+            current_sim_time = start_time + timedelta(hours=i * dt)
+            timer_text.set_text(f"Temps : {current_sim_time.strftime('%Y-%m-%d %H:%M:%S')}")
+
             prob = np.abs(psi) ** 2
             prob_line.set_ydata(prob)
 
@@ -167,14 +179,14 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
 
 
 if __name__ == "__main__":
-    time_step = 0.1 # Accélère un peu l'évolution
+    time_step = 0.1
     num_iterations = 50000  
     update_frequency = 1
     num_points = 50000
-    barrier_thickness = [1.5, 0.75, 1.0, 2.0]
-    potential_strength = [200, 100, 160, 400]
-    resistance_price_val = [185, 182.5, 177.5, 172] 
-    action = "NVDA" 
+    barrier_thickness = []
+    potential_strength = []
+    resistance_price_val = []
+    action = "SPY"
 
     # 1. Initialisation avec prise en compte des résistances pour la plage
     x_0, x, dx, mass, initial_drift, initial_volatility, initial_price, initial_mu = initialize_parameters(num_points, action, resistance_price_val)
