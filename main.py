@@ -8,14 +8,13 @@ from datetime import datetime, timedelta
 def initialize_parameters(N, action, resistance_prices=None):
     ticker = yf.Ticker(action)
     initial_price = ticker.fast_info["last_price"]  # Prix intital de l'action
-    df = yf.download(action, period="14d", interval="1h")  # Récolte des prix sur l'action choisie
+    df = yf.download(action, period="14d", interval="1h") # Récolte des prix sur l'action choisie
     prices = df['Close'].values.flatten()  # On prend seulement les valeurs de fermeture
     log_return = np.diff(np.log(prices))  # Différence entre deux éléments consécutifs
     v_0 = np.std(log_return)  # Calcul de l'écart-type (volatilité)
     mu = np.mean(log_return)  # Moyenne arithmétique des différences de prix pour trouvée le drift
     k_0 = mu - (v_0 ** 2 / 2)  # Calcul du drift moyen
     x_0 = np.log(initial_price)  # Position (x) de l'action
-
     # Ajustement de la plage pour inclure les barrières si présentes
     x_min = x_0 - 0.1
     x_max = x_0 + 0.1
@@ -34,7 +33,7 @@ def initialize_parameters(N, action, resistance_prices=None):
 def create_initial_wave_packet(x, x_0, v_0, k_0):
     gaussian = np.exp(-((x - x_0) ** 2) / (4 * v_0 ** 2))  # Création de la cloche Gaussienne
     mass = 1 / v_0 ** 2
-    phase = np.exp(1j * (k_0 * mass) * x) 
+    phase = np.exp(1j * k_0 * x)
     
     A = (1 / (2 * np.pi * v_0 ** 2)) ** (1 / 4)  # Constante pour que l'aire sous la courbe soit de 1
     psi = A * gaussian * phase  # L'état complet de l'action
@@ -79,7 +78,7 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
     H_diag = potential_vector + K_coeff * (-2)  # Diagonale principal du Hamiltonian
     diag_main_ML = 1 + alpha * H_diag  # Diagonale principale de la matrice de gauche
     diag_off_ML = alpha * K_coeff  # Diagonales secondaires de la matrice de gauche
-    M_L_banded = np.zeros((3, len(psi)), dtype=complex)  # Créationd de la matrice en bande pour sauver de la RAM
+    M_L_banded = np.zeros((3, len(psi)), dtype=complex)  # Création de la matrice en bande pour sauver de la RAM
     M_L_banded[0, 1:] = diag_off_ML  # Ajout de la diagonale secondaire supérieure
     M_L_banded[1, :] = diag_main_ML  # Ajout de la diagonale principale
     M_L_banded[2, :-1] = diag_off_ML  # Ajout de la diagonale secondaire inférieure
@@ -179,7 +178,7 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
                 prob_labels[j].set_position((x[idx], new_ylim_top * 0.75))
 
             plt.draw()
-            plt.pause(1)
+            plt.pause(0.0001)
 
     plt.ioff()
     plt.show()
@@ -192,10 +191,10 @@ if __name__ == "__main__":
     num_iterations = 50000
     update_frequency = 1
     num_points = 50000
-    barrier_thickness = [2.5,1,2]
-    potential_strength = [25,12,50]
-    resistance_price_val = [630,640,690]
-    action = "SPY"
+    barrier_thickness = [2.5,1,0.5,2]
+    potential_strength = [25,12,8,14]
+    resistance_price_val = [630,640,680,690]
+    action = "AAPL"
 
     # 1. Initialisation avec prise en compte des résistances pour la plage
     x_0, x, dx, mass, initial_drift, initial_volatility, initial_price, initial_mu = initialize_parameters(num_points,
@@ -212,4 +211,4 @@ if __name__ == "__main__":
     # 4. Lancement de la simulation et de l'animation avec les nouveaux paramètres
     psi_final = run_simulation_and_animate(psi_initial, K_coeff, time_step, num_iterations, x, potential_vector,
                                            update_frequency, resistance_price_val, barrier_thickness,
-                                           v0=initial_volatility, k0=initial_drift, mu=initial_mu)
+                                           initial_volatility, initial_drift, initial_mu)
