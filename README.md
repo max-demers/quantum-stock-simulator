@@ -15,7 +15,7 @@ Ce projet propose une approche originale pour modéliser l'évolution du prix d'
 Assurez-vous d'avoir installé les bibliothèques Python suivantes :
 
 ```bash
-pip install numpy matplotlib yfinance scipy
+pip install numpy matplotlib yfinance scipy datetime
 ```
 
 ## Utilisation
