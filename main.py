@@ -12,7 +12,7 @@ def initialize_parameters(N, action, resistance_prices=None):
     prices = df['Close'].values.flatten()  # On prend seulement les valeurs de fermeture
     log_return = np.diff(np.log(prices))  # Différence entre deux éléments consécutifs
     v_0 = np.std(log_return)  # Calcul de l'écart-type (volatilité)
-    k_0 = np.mean(log_return)  # Moyenne des différences de prix pour trouvée le drift
+    k_0 = np.mean(log_return) # Moyenne des différences de prix pour trouvée le drift
     x_0 = np.log(initial_price)  # Position (x) de l'action
     # Ajustement de la plage pour inclure les barrières si présentes
     x_min = x_0 - 0.1
@@ -74,7 +74,7 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
                                v0=0, k0=0):
     # Préparation pour la simulation (logique de Crank-Nicolson)
     alpha = 1j * dt / 2
-    H_diag = potential_vector + K_coeff * (-2)  # Diagonale principal du Hamiltonian
+    H_diag = - potential_vector + K_coeff * (-2)  # Diagonale principal du Hamiltonian
     diag_main_ML = 1 + alpha * H_diag  # Diagonale principale de la matrice de gauche
     diag_off_ML = alpha * K_coeff  # Diagonales secondaires de la matrice de gauche
     M_L_banded = np.zeros((3, len(psi)), dtype=complex)  # Création de la matrice en bande pour sauver de la RAM
