@@ -172,6 +172,8 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
             # Mise à jour des probabilités de breakout
             for j, idx in enumerate(breakout_indices):
                 p_breakout = np.sum(prob[idx:]) * dx
+                if p_breakout > 0.5:
+                    p_breakout = np.sum(prob[:idx])* dx
                 prob_labels[j].set_text(f"Breakout:\n{p_breakout:.1%}")
                 prob_labels[j].set_position((x[idx], new_ylim_top * 0.75))
 
