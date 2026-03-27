@@ -133,7 +133,7 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
         return f"{np.exp(val):.1f}$"
 
     ax.xaxis.set_major_formatter(FuncFormatter(price_formatter))
-    ax.set_xlabel("Log(Prix)")
+    ax.set_xlabel("Prix ($)")
     ax.set_ylabel("Densité de Probabilité")
     ax.set_title(f"Simulation Quantique de l'Action")
     ax.legend(loc='upper right')
@@ -193,7 +193,7 @@ if __name__ == "__main__":
     num_points = 50000
     barrier_thickness = [2.5,1,0.5,2]
     potential_strength = [25,12,8,14]
-    resistance_price_val = [630,640,680,690]
+    resistance_price_val = [620,630,680,690]
     action = "SPY"
 
     # 1. Initialisation avec prise en compte des résistances pour la plage
