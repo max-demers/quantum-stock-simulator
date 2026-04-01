@@ -177,7 +177,8 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
                                     f"Prix Prédit (moy): {expected_price:.2f}$\n" # On affiche le prix prédit
                                     f"Prix Réel: {current_real_price:.2f}$\n" # On affiche le prix réel
                                     f"Z-Score: {z_score:.2f}\n" # On affiche le z-score
-                                    f"Fiabilité Modèle: {(valid_points/total_points):.1%}") # On affiche la fiabilité du modèle
+                                    f"Fiabilité Modèle: {(valid_points/total_points):.1%}\n" # On affiche la fiabilité du modèle
+                                    f"Probabilité totale: {np.sum(prob)*dx:.3%}") # On affiche la probabilité totale
 
             timer_text.set_text(f"Temps : {(start_time + timedelta(hours=i*dt)).strftime('%Y-%m-%d %H:%M')}") # On met à jour le timer
             
@@ -205,15 +206,15 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
 
 
 if __name__ == "__main__":
-    time_step = 0.05 # On augmente un peu le pas pour que l'animation soit fluide
-    num_iterations = 350 # Correspond à environ 100h de trading
-    update_frequency = 5 # On met à jour le graphique toutes les x itérations
+    time_step = 0.01 # On augmente un peu le pas pour que l'animation soit fluide
+    num_iterations = 50000 # Correspond à environ 100h de trading
+    update_frequency = 50 # On met à jour le graphique toutes les x itérations
     num_points = 50000 # On augmente le nombre de points pour une meilleure précision
     
     # Paramètres de test (SPY)
-    barrier_thickness = [] # Épaisseur de la barrière
-    potential_strength = [] # Force de la barrière
-    resistance_price_val = [] # Prix de la résistance
+    barrier_thickness = [4,2] # Épaisseur de la barrière
+    potential_strength = [25,46] # Force de la barrière
+    resistance_price_val = [640,695] # Prix de la résistance
     action = "SPY" # Action à tester
 
     # 1. Initialisation avec split Train/Test
