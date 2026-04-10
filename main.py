@@ -25,8 +25,8 @@ def initialize_parameters(N, action, resistance_prices=None):
     k_0 = np.mean(log_return) # On calcule le drift
     
     x_0 = np.log(initial_price) # On prend le log du prix initial
-    x_min = x_0 - 0.15 # On définit la borne inférieure de l'espace des prix
-    x_max = x_0 + 0.15 # On définit la borne supérieure de l'espace des prix
+    x_min = x_0 - 0.25 # On définit la borne inférieure de l'espace des prix
+    x_max = x_0 + 0.25 # On définit la borne supérieure de l'espace des prix
     
     if resistance_prices: # Si on a des résistances, on définit les bornes de l'espace des prix
         max_res = np.log(max(resistance_prices) * 1.05) # On prend le log de la résistance maximale
@@ -83,7 +83,7 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
                                v0=0, k0=0, real_prices=None, real_times=None):
     """ Exécute la simulation et anime le résultat """
     alpha = 1j * dt / 2 # On calcule alpha
-    H_diag = - potential_vector + K_coeff * (-2) # On calcule la diagonale principale de l'hamiltonien
+    H_diag = -potential_vector + K_coeff * (-2) # On calcule la diagonale principale de l'hamiltonien
     diag_main_ML = 1 + alpha * H_diag # On calcule la diagonale principale du facteur de gauche de Crank-Nicolson
     diag_off_ML = alpha * K_coeff # On calcule la diagonale secondaire
     M_L_banded = np.zeros((3, len(psi)), dtype=complex) # On crée une matrice bande
@@ -150,7 +150,7 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
         if i % steps_per_frame == 0: # Si on atteint un pas de temps pour l'affichage
             # On synchronise le temps de la simulation avec l'index des prix réels
             # On simule par pas de dt (0.01h), donc i*dt nous donne l'heure écoulée
-            real_idx = int(i * dt) 
+            real_idx = int(i * dt) # On prend l'indice du prix réel
             if real_prices is not None and real_idx < len(real_prices): # Si on a des prix réels
                 current_real_price = float(real_prices[real_idx]) # On prend le prix réel
                 log_real_price = np.log(current_real_price) # On prend le log du prix réel
@@ -205,30 +205,113 @@ def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_p
     return psi # On retourne la fonction d'ondes
 
 
+def fast_simulation(psi, K_coeff, dt, S, potential_vector):
+    """ Exécute la simulation rapidement sans animation pour comparaison """
+    alpha = 1j * dt / 2 # On calcule alpha
+    H_diag = -potential_vector + K_coeff * (-2) # On calcule H_diag
+    diag_main_ML = 1 + alpha * H_diag # On calcule diag_main_ML
+    diag_off_ML = alpha * K_coeff # On calcule diag_off_ML
+    M_L_banded = np.zeros((3, len(psi)), dtype=complex) # On crée M_L_banded
+    M_L_banded[0, 1:] = diag_off_ML # On ajoute diag_off_ML
+    M_L_banded[1, :] = diag_main_ML # On ajoute diag_main_ML
+    M_L_banded[2, :-1] = diag_off_ML # On ajoute diag_off_ML
+
+    for i in range(S):
+        term_H_psi = H_diag * psi # On calcule H*psi
+        term_H_psi[1:] += K_coeff * psi[:-1] # On ajoute K*psi
+        term_H_psi[:-1] += K_coeff * psi[1:] # On ajoute K*psi
+        B = psi - alpha * term_H_psi # On calcule B
+        psi = solve_banded((1, 1), M_L_banded, B) # On résout l'équation
+    return psi
+
+def plot_barrier_impact(psi_no_barrier, psi_with_barrier, x, resistance_prices):
+    """ Génère un beau graphique comparatif de l'impact de la barrière """
+    plt.figure(figsize=(12, 7)) # On crée une figure
+    prices = np.exp(x) # On calcule les prix
+    
+    prob_no = np.abs(psi_no_barrier) ** 2 # On calcule la probabilité
+    prob_yes = np.abs(psi_with_barrier) ** 2 # On calcule la probabilité
+    
+    # Trouver les limites raisonnables pour l'axe X (cibler la zone où la probabilité n'est pas nulle)
+    threshold = np.max(prob_no) * 0.01 # On calcule le seuil
+    active_indices = np.where(prob_no > threshold)[0] # On trouve les indices actifs
+    if len(active_indices) > 0: # Si on a des indices actifs
+        xlim_min, xlim_max = prices[active_indices[0]], prices[active_indices[-1]] # On définit les limites de l'axe X
+    else: 
+        xlim_min, xlim_max = np.min(prices), np.max(prices) # On définit les limites de l'axe X
+
+    # Courbe classique (Sans barrière)
+    plt.plot(prices, prob_no, label="Modèle Standard (Sans Barrière)", color="gray", linestyle="--", lw=2)
+    plt.fill_between(prices, prob_no, color="gray", alpha=0.1)
+    
+    # Courbe quantique (Avec barrière)
+    plt.plot(prices, prob_yes, label="Modèle Quantique Actuel (Avec Barrière)", color="royalblue", lw=3)
+    plt.fill_between(prices, prob_yes, color="royalblue", alpha=0.3)
+    
+    # Affichage de la barrière de résistance
+    for res in resistance_prices:
+        plt.axvline(x=res, color="red", linestyle="-", linewidth=2.5, label=f"Résistance ({res:.2f}$)")
+        plt.axvspan(res, res * 1.005, color='red', alpha=0.15) # Zone de la barrière
+
+    plt.title("Impact d'une Résistance Boursière sur les Probabilités", fontsize=14, fontweight='bold')
+    plt.xlabel("Prix de l'Action ($)", fontsize=12)
+    plt.ylabel("Densité de Probabilité (Où le prix a le plus de chances d'être)", fontsize=12)
+    plt.xlim(xlim_min * 0.98, xlim_max * 1.02) # On définit les limites de l'axe X
+    plt.legend(fontsize=11) 
+    plt.grid(alpha=0.3) 
+    
+    # Ajout d'annotations explicatives
+    plt.annotate('Accumulation (Rebond)', 
+                 xy=(resistance_prices[2]*0.99, np.max(prob_yes)*0.8),
+                 xytext=(resistance_prices[2]*0.95, np.max(prob_yes)*0.9),
+                 arrowprops=dict(facecolor='black', shrink=0.05, width=1.5, headwidth=8),
+                 fontsize=10, fontweight='bold', color='darkblue')
+
+    plt.annotate('Effet Tunnel\n(Pénétration faible)', 
+                 xy=(resistance_prices[2]*1.01, np.max(prob_no)*0.2),
+                 xytext=(resistance_prices[2]*1.03, np.max(prob_no)*0.4),
+                 arrowprops=dict(facecolor='red', shrink=0.05, width=1.5, headwidth=8),
+                 fontsize=10, fontweight='bold', color='darkred')
+
+    plt.tight_layout()
+    plt.show()
+
 if __name__ == "__main__":
-    time_step = 0.01 # On augmente un peu le pas pour que l'animation soit fluide
-    num_iterations = 50000 # Correspond à environ 100h de trading
-    update_frequency = 50 # On met à jour le graphique toutes les x itérations
-    num_points = 50000 # On augmente le nombre de points pour une meilleure précision
+    # Modifions les paramètres pour que ça tourne en un temps raisonnable
+    time_step = 0.01
+    num_iterations = 5000
+    update_frequency = 10 
+    num_points = 50000
     
     # Paramètres de test (SPY)
-    barrier_thickness = [4,2] # Épaisseur de la barrière
-    potential_strength = [25,46] # Force de la barrière
-    resistance_price_val = [640,695] # Prix de la résistance
-    action = "SPY" # Action à tester
-
-    # 1. Initialisation avec split Train/Test
-    params = initialize_parameters(num_points, action, resistance_price_val)
+    action = "SPY"
+    # On initialise d'abord sans résistances pour obtenir le initial_price
+    params = initialize_parameters(num_points, action)
     x_0, x, dx, mass, initial_drift, initial_volatility, initial_price, real_prices, real_times = params
+
+    # Définition d'une résistance pour illustrer votre valeur ajoutée (+4% au dessus du prix)
+    resistance_price_val = [600,640,690,720]
+    barrier_thickness = [6,3,2.5,3]
+    potential_strength = [29,18,38,20] # Force importante
 
     # 2. Création de la fonction d'ondes
     psi_initial = create_initial_wave_packet(x, x_0, initial_volatility, initial_drift)
 
-    # 3. Hamiltonien
-    K_coeff, potential_vector = build_hamiltonian(num_points, dx, mass, x, resistance_price_val, potential_strength,
-                                                  barrier_thickness)
+    # 3. Hamiltonien AVEC barrière
+    K_coeff, potential_vector_barrier = build_hamiltonian(num_points, dx, mass, x, resistance_price_val, potential_strength, barrier_thickness)
+    
+    # 4. Hamiltonien SANS barrière (pour la comparaison)
+    _, potential_vector_no_barrier = build_hamiltonian(num_points, dx, mass, x, [], [], [])
 
-    # 4. Simulation avec PRIX RÉEL
-    psi_final = run_simulation_and_animate(psi_initial, K_coeff, time_step, num_iterations, x, potential_vector,
+    print("Calcul du modèle classique avec la simulation rapide...")
+    # Simulation rapide SANS barrière
+    psi_final_no_barrier = fast_simulation(psi_initial.copy(), K_coeff, time_step, num_iterations, potential_vector_no_barrier)
+
+    print("Lancement de l'animation quantique avec barrière...")
+    # Simulation animée AVEC barrière
+    psi_final_with_barrier = run_simulation_and_animate(psi_initial.copy(), K_coeff, time_step, num_iterations, x, potential_vector_barrier,
                                            update_frequency, resistance_price_val, barrier_thickness,
                                            initial_volatility, initial_drift, real_prices, real_times)
+
+    # 5. Affichage du graphique comparatif final (La Preuve de votre projet!)
+    plot_barrier_impact(psi_final_no_barrier, psi_final_with_barrier, x, resistance_price_val)
