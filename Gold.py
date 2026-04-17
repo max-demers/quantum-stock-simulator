@@ -1,8 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import yfinance as yf
-from scipy.linalg import solve_banded
-from datetime import datetime, timedelta
+import main
 
 
 def initialize_parameters(N, action, resistance_prices=None):
@@ -50,171 +48,6 @@ def initialize_parameters(N, action, resistance_prices=None):
     return x_0, x, dx, mass, k_0, v_0, initial_price, real_prices_future, real_times_future
 
 
-def create_initial_wave_packet(x, x_0, v_0, k_0):
-    """ Crée le paquet d'ondes initial """
-    gaussian = np.exp(-((x - x_0) ** 2) / (4 * (v_0/2) ** 2)) # On crée une gaussienne
-    phase = np.exp(1j * k_0 * x) # On crée une phase
-    A = (1 / (2 * np.pi * (v_0/2) ** 2)) ** (1 / 4) # On normalise
-    psi = A * gaussian * phase # On crée le paquet d'ondes
-    return psi
-
-
-def build_hamiltonian(N, dx, mass, x, resistance_price, V_0, barrier_thickness):
-    """ Construit l'hamiltonien """
-    K_coeff = -1 / (2 * mass * dx ** 2) # On calcule le coefficient de l'hamiltonien
-    potential_vector = np.zeros(N) # On crée un vecteur de potentiel
-    for price, thick, strength in zip(resistance_price, barrier_thickness, V_0): # On parcourt les résistances
-        log_start = np.log(price) # On prend le log du prix
-        log_end = np.log(price + thick) # On prend le log du prix + épaisseur
-
-        idx_1 = (np.abs(x - log_start)).argmin() # On trouve l'indice de la résistance
-        idx_2 = (np.abs(x - log_end)).argmin() # On trouve l'indice de la résistance + épaisseur
-
-        idx_start = min(idx_1, idx_2) # On prend l'indice de début
-        idx_end = max(idx_1, idx_2) # On prend l'indice de fin
-        L_point = max(1, idx_end - idx_start) # On calcule le nombre de points
-
-        if isinstance(strength, (list, tuple)) and len(strength) == 2: # Si on a une force variable
-            v_at_price, v_at_thick = strength # On prend la force au début et à la fin
-            vals = np.linspace(v_at_price, v_at_thick, L_point) if idx_1 <= idx_2 else np.linspace(v_at_thick, v_at_price, L_point) # On crée un vecteur de forces
-            potential_vector[idx_start: idx_start + L_point] = vals # On ajoute les forces au vecteur de potentiel
-        else:
-            potential_vector[idx_start: idx_start + L_point] = strength # On ajoute les forces au vecteur de potentiel
-    return K_coeff, potential_vector
-
-
-def run_simulation_and_animate(psi, K_coeff, dt, S, x, potential_vector, steps_per_frame=10,
-                               resistance_price=None, barrier_thickness=None,
-                               v0=0, k0=0, real_prices=None, real_times=None):
-    """ Exécute la simulation et anime le résultat """
-    alpha = 1j * dt / 2 # On calcule alpha
-    H_diag = - potential_vector + K_coeff * (-2) # On calcule la diagonale principale de l'hamiltonien
-    diag_main_ML = 1 + alpha * H_diag # On calcule la diagonale principale du facteur de gauche de Crank-Nicolson
-    diag_off_ML = alpha * K_coeff # On calcule la diagonale secondaire
-    M_L_banded = np.zeros((3, len(psi)), dtype=complex) # On crée une matrice bande
-    M_L_banded[0, 1:] = diag_off_ML # On ajoute la diagonale secondaire
-    M_L_banded[1, :] = diag_main_ML # On ajoute la diagonale principale
-    M_L_banded[2, :-1] = diag_off_ML # On ajoute la diagonale secondaire
-
-    breakout_indices = [] # On crée une liste d'indices de sortie
-    dx = x[1] - x[0] # On calcule le pas de l'espace des prix
-    if resistance_price is not None and barrier_thickness is not None: # Si on a des résistances
-        for p, t in zip(resistance_price, barrier_thickness): # On parcourt les résistances
-            log_end = np.log(p + t) # On prend le log de la résistance + épaisseur
-            idx = (np.abs(x - log_end)).argmin() # On trouve l'indice de la résistance + épaisseur
-            breakout_indices.append(idx) # On ajoute l'indice de sortie
-
-    plt.ion() # On active le mode interactif
-    fig, ax = plt.subplots(figsize=(10, 6)) # On crée une figure et un axe
-
-    prob_initial = np.abs(psi) ** 2 # On calcule la probabilité initiale
-    prob_line, = ax.plot(x, prob_initial, label="Probabilité du prix (Modèle)", color="blue", lw=2) # On trace la probabilité initiale
-    fill_collection = ax.fill_between(x, prob_initial, color="blue", alpha=0.3) # On remplit la zone sous la courbe
-    # Ligne pour le PRIX RÉEL
-    real_price_line = ax.axvline(x=np.nan, color="black", linestyle="-", lw=3, label="Prix Réel (Marché)") # On trace la ligne du prix réel
-
-    # Lignes pour les barrières
-    V_abs = np.abs(potential_vector) # On prend la valeur absolue du potentiel
-    V_log = np.log1p(V_abs) # On prend le log du potentiel
-    V_norm = (V_log / np.max(V_log) if np.max(V_log) > 0 else 1) # On normalise le potentiel
-    V_plot = V_norm * np.sign(potential_vector) # On multiplie par le signe du potentiel
-    potential_line, = ax.plot(x, V_plot * np.max(prob_initial), label="Obstacles (Résistances)",
-                              color="red", linestyle="--", alpha=0.4) # On trace les lignes des barrières
-
-    prob_labels = [ax.text(x[idx], 0, "", color="darkred", fontweight="bold", ha="center", fontsize=9)
-                   for idx in breakout_indices] # On ajoute les labels des barrières
-
-    # Panel de statistiques
-    stats_text = ax.text(0.02, 0.97, "", transform=ax.transAxes, fontsize=10, # On ajoute le panel de statistiques
-                        verticalalignment='top', bbox=dict(boxstyle='round', facecolor='white', alpha=0.9))
-
-    start_time = real_times[0] if real_times is not None else datetime.now()
-    timer_text = ax.text(0.5, 0.96, "", transform=ax.transAxes, fontsize=12, # On ajoute le timer
-                         verticalalignment='top', horizontalalignment='center',
-                         bbox=dict(boxstyle='round', facecolor='white', alpha=0.8),
-                         fontweight='bold', color='darkblue')
-
-    from matplotlib.ticker import FuncFormatter # On importe le formateur de fonctions
-    ax.xaxis.set_major_formatter(FuncFormatter(lambda val, pos: f"{np.exp(val):.1f}$")) # On formate l'axe des abscisses
-    ax.set_xlabel("Prix ($)") # On ajoute le label de l'axe des abscisses
-    ax.set_ylabel("Densité de Probabilité") # On ajoute le label de l'axe des ordonnées
-    ax.set_title(f"Validation du Modèle Quantique vs Réalité") # On ajoute le titre
-    ax.legend(loc='upper right') # On ajoute la légende
-    ax.grid(alpha=0.2) # On ajoute la grille
-
-    valid_points = 0 # On initialise le nombre de points valides
-    total_points = 0 # On initialise le nombre total de points
-
-    for i in range(S): # On parcourt les pas de temps
-        term_H_psi = H_diag * psi # On calcule le terme H*psi
-        term_H_psi[1:] += K_coeff * psi[:-1] # On ajoute le terme K*psi
-        term_H_psi[:-1] += K_coeff * psi[1:] # On ajoute le terme K*psi
-        B = psi - alpha * term_H_psi # On calcule B
-        psi = solve_banded((1, 1), M_L_banded, B) # On résout l'équation
-
-        if i % steps_per_frame == 0: # Si on atteint un pas de temps pour l'affichage
-            # On synchronise le temps de la simulation avec l'index des prix réels
-            # On simule par pas de dt, sachant que 1 unité = 1 jour de trading
-
-            real_idx = int(i * dt)
-            if real_prices is not None and real_idx < len(real_prices): # Si on a des prix réels
-                current_real_price = float(real_prices[real_idx]) # On prend le prix réel
-                log_real_price = np.log(current_real_price) # On prend le log du prix réel
-                real_price_line.set_xdata([log_real_price]) # On met à jour la ligne du prix réel
-
-                # Calcul de la précision (Est-ce que le prix réel est sous la cloche ?)
-                prob = np.abs(psi) ** 2 # On calcule la probabilité
-                price_idx = (np.abs(x - log_real_price)).argmin() # On trouve l'indice du prix réel
-
-                # Calcul de l'espérance (Prix prédit moyen)
-                expected_log_price = float(np.sum(x * prob) * dx) # On calcule l'espérance
-                expected_price = float(np.exp(expected_log_price)) # On calcule le prix
-
-                # Z-Score simplifié : distance entre réel et espérance en unités de volatilité
-                z_score = float(np.abs(log_real_price - expected_log_price) / v0) # On calcule le z-score
-
-                if z_score < 2: # Dans l'intervalle de confiance de 95%
-                    valid_points += 1 # On ajoute un point valide
-                total_points += 1 # On ajoute un point total
-
-                stats_text.set_text(f"--- VALIDATION ---\n" # On affiche les statistiques
-                                    f"Drift: {k0:.2%}\n" # On affiche le drift
-                                    f"Volatilité: {v0:.2%}\n" # On affiche la volatilité
-                                    f"Prix Prédit (moy): {expected_price:.2f}$\n" # On affiche le prix prédit
-                                    f"Prix Réel: {current_real_price:.2f}$\n" # On affiche le prix réel
-                                    f"Z-Score: {z_score:.2f}\n" # On affiche le z-score
-                                    f"Fiabilité Modèle: {(valid_points/total_points):.1%}\n" # On affiche la fiabilité du modèle
-                                    f"Probabilité totale: {np.sum(prob)*dx:.3%}") # On affiche la probabilité totale
-
-            if real_times is not None and real_idx < len(real_times):
-                current_date = real_times[real_idx]
-                timer_text.set_text(f"Date : {current_date.strftime('%Y-%m-%d')}") # On met à jour le timer avec la vraie date
-            else:
-                timer_text.set_text(f"Date : {(start_time + timedelta(days=i*dt)).strftime('%Y-%m-%d')}")
-
-            prob = np.abs(psi) ** 2 # On calcule la probabilité
-            prob_line.set_ydata(prob) # On met à jour la ligne de probabilité
-            fill_collection.remove() # On supprime la collection de remplissage
-            fill_collection = ax.fill_between(x, prob, color="blue", alpha=0.3) # On crée une nouvelle collection de remplissage
-
-            new_ylim_top = max(0.5, np.max(prob) * 1.3) # Calcule la limite supérieure de l'axe des ordonnées
-            ax.set_ylim(-0.02, new_ylim_top) # On met à jour la limite supérieure de l'axe des ordonnées
-            potential_line.set_ydata(V_plot * new_ylim_top * 0.7) # On met à jour la ligne des barrières
-
-            for j, idx in enumerate(breakout_indices):
-                p_breakout = np.sum(prob[idx:]) * dx # Calcule la probabilité de breakout
-                if p_breakout > 0.5: p_breakout = np.sum(prob[:idx])* dx # Si la probabilité de breakout est supérieure à 0.5, on prend la probabilité de non-breakout
-                prob_labels[j].set_text(f"Breakout:\n{p_breakout:.1%}") # On affiche la probabilité de breakout
-                prob_labels[j].set_position((x[idx], new_ylim_top * 0.8)) # On met à jour la position du label
-
-            plt.draw() # On dessine le graphique
-            plt.pause(0.01) # On met à jour le graphique
-
-    plt.ioff() # On désactive le mode interactif
-    plt.show() # On affiche le graphique
-    return psi # On retourne la fonction d'ondes
-
-
 if __name__ == "__main__":
     time_step = 0.01 # Unité de temps (1.0 = 1 jour de trading)
     num_iterations = 18500 # Correspond à environ 185 jours de trading (couvre la période)
@@ -232,13 +65,13 @@ if __name__ == "__main__":
     x_0, x, dx, mass, initial_drift, initial_volatility, initial_price, real_prices, real_times = params
 
     # 2. Création de la fonction d'ondes
-    psi_initial = create_initial_wave_packet(x, x_0, initial_volatility, initial_drift)
+    psi_initial = main.create_initial_wave_packet(x, x_0, initial_volatility, initial_drift)
 
     # 3. Hamiltonien
-    K_coeff, potential_vector = build_hamiltonian(num_points, dx, mass, x, resistance_price_val, potential_strength,
+    K_coeff, potential_vector = main.build_hamiltonian(num_points, dx, mass, x, resistance_price_val, potential_strength,
                                                   barrier_thickness)
 
     # 4. Simulation avec PRIX RÉEL
-    psi_final = run_simulation_and_animate(psi_initial, K_coeff, time_step, num_iterations, x, potential_vector,
+    psi_final = main.run_simulation_and_animate(psi_initial, K_coeff, time_step, num_iterations, x, potential_vector,
                                            update_frequency, resistance_price_val, barrier_thickness,
                                            initial_volatility, initial_drift, real_prices, real_times)
