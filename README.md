@@ -11,14 +11,16 @@ Ce projet propose une approche originale et visuelle pour modéliser l'évolutio
 
 ## 📁 Architecture du Projet
 
-Le projet a évolué et intègre désormais trois cas d'usage démontrant la puissance de l'outil :
+Le projet est architecturé autour d'un cœur mathématique et de trois scripts d'entrée distincts qui l'exploitent :
 
-1. `main.py` : **Simulateur Standard Interactif**
-   C'est le module racine de l'application (historiquement exécuté sur l'actif `SPY`). Il calcule la fonction d'onde, gère l'animation de l'évolution des densités de probabilités en temps réel et détecte les franchissements de niveau (breakouts).
-2. `Comparaison.py` : **Étude d'Impact des Barrières de Résistances**
-   Permet d'exécuter la simulation sous deux univers parallèles : le modèle probabiliste lisse avec et sans les perturbations induites par les limites boursières. Le script génère un magnifique visuel statique comparatif illustrant ce que permettent vos barrières (création visuelle d'un rebond) et le calcul "d'effet tunnel" induit par le bris de confiance du marché.
-3. `Gold.py` : **Test Chronologique Rétrospectif sur l'Or (`GC=F`)**
-   Isole l'entraînement des données du Hamiltonien (2020-2023) pour tester le paquet d'ondes dans le futur (2023). Superpose le *prix réel historique* de l'actif en overlay de l'animation probabilisée quantique.
+1. `quantum_engine.py` : **Le Cœur du Moteur Quantique**
+   C'est la bibliothèque contenant les fonctions fondamentales : méthodes mathématiques (Crank-Nicolson), création de la matrice du Hamiltonien, génération des paquets d'ondes et interface de rendu d'animation. Les scripts ci-dessous s'en servent comme socle.
+2. `main.py` : **Simulateur Standard Interactif**
+   C'est le point de lancement basique (configuré sur `SPY`). Il appelle le moteur pour animer l'évolution des densités de probabilités en temps réel et détecter les franchissements (breakouts).
+3. `Comparaison.py` : **Étude d'Impact des Barrières de Résistances**
+   Ce script exploite le moteur pour exécuter la simulation sous deux univers parallèles : le modèle probabiliste lisse avec et sans les barrières de limites boursières. Il génère un visuel comparatif illustrant la création du "rebond" et du calcul "d'effet tunnel".
+4. `Gold.py` : **Test Chronologique Rétrospectif sur l'Or (`GC=F`)**
+   Sépare les données historiques (2020-2023) pour tester la projection probabilisée (2023). Le script lance le moteur sur l'Or et superpose le *prix réel historique* en overlay de l'animation pour évaluer la capacité prédictive du Hamiltonien.
 
 ## 🛠️ Prérequis et Installation
 
@@ -59,10 +61,9 @@ Dans chacun de ces scripts d’exécution (sous le bloc conditionnel de lancemen
 
 Pour poursuivre la transformation professionnelle de cette plateforme analytique quantique vers des « standards de l'industrie technologique », voici plusieurs initiatives logicielles qui pourraient être appliquées à l'avenir :
 
-1. **Modularisation et Extraction de Bibliothèque** : Actuellement, des fonctions comme `create_initial_wave_packet` ou `build_hamiltonian` sont dans `main.py`, puis importées laborieusement (`import main`) par d'autres scripts. ➡️ *Idéal : Placer ces logiques complexes dans un sous-dossier `core/` ou `physics_engine.py` dédié uniquement aux mathématiques.*
-2. **Centraliser la Configuration Boursière** : Gérer les données de la variable `barrier_thickness` ou `resistance_price_val` au moyen d'un fichier externe tel qu'un environnement YAML (`config.yaml`) ou JSON pour découpler la donnée simulée de la formulation logicielle métier.
-3. **Journalisation Applicative (Logs)** : Substituer l'instruction `print()` par l'utilisation de la bibliothèque officielle de traçabilité `logging` en Python, ceci permet un archivage sécuritaire de la donnée exécutive du produit.
-4. **Validation de Qualité (Typage)** : Documenter avec plus d'exactitude les signatures, par l'utilisation du *Type Hinting*, ex: `def fast_simulation(psi: np.ndarray, dt: float) -> np.ndarray:`.
+1. **Centraliser la Configuration Boursière** : Gérer les données de la variable `barrier_thickness` ou `resistance_price_val` au moyen d'un fichier externe tel qu'un environnement YAML (`config.yaml`) ou JSON pour découpler la donnée simulée de la formulation logicielle métier.
+2. **Journalisation Applicative (Logs)** : Substituer l'instruction `print()` par l'utilisation de la bibliothèque officielle de traçabilité `logging` en Python, ceci permet un archivage sécuritaire de la donnée exécutive du produit.
+3. **Validation de Qualité (Typage)** : Documenter avec plus d'exactitude les signatures, par l'utilisation du *Type Hinting*, ex: `def fast_simulation(psi: np.ndarray, dt: float) -> np.ndarray:`.
 
 ## ⚠️ Avertissement
 
