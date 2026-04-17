@@ -1,6 +1,6 @@
 import numpy as np
 import yfinance as yf
-import main
+import quantum_engine as qe
 
 
 def initialize_parameters(N, action, resistance_prices=None):
@@ -65,13 +65,13 @@ if __name__ == "__main__":
     x_0, x, dx, mass, initial_drift, initial_volatility, initial_price, real_prices, real_times = params
 
     # 2. Création de la fonction d'ondes
-    psi_initial = main.create_initial_wave_packet(x, x_0, initial_volatility, initial_drift)
+    psi_initial = qe.create_initial_wave_packet(x, x_0, initial_volatility, initial_drift)
 
     # 3. Hamiltonien
-    K_coeff, potential_vector = main.build_hamiltonian(num_points, dx, mass, x, resistance_price_val, potential_strength,
+    K_coeff, potential_vector = qe.build_hamiltonian(num_points, dx, mass, x, resistance_price_val, potential_strength,
                                                   barrier_thickness)
 
     # 4. Simulation avec PRIX RÉEL
-    psi_final = main.run_simulation_and_animate(psi_initial, K_coeff, time_step, num_iterations, x, potential_vector,
+    psi_final = qe.run_simulation_and_animate(psi_initial, K_coeff, time_step, num_iterations, x, potential_vector,
                                            update_frequency, resistance_price_val, barrier_thickness,
                                            initial_volatility, initial_drift, real_prices, real_times)

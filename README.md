@@ -1,49 +1,69 @@
-# Simulateur de Prix d'Action par Mécanique Quantique
+# Simulateur de Prix d'Action par Mécanique Quantique (PI)
 
-Ce projet propose une approche originale pour modéliser l'évolution du prix d'une action en utilisant les principes de la mécanique quantique. Le prix de l'action est représenté par un paquet d'ondes (fonction d'onde) qui évolue au cours du temps face à des "barrières de potentiel" représentant les niveaux de support et de résistance du marché.
+Ce projet propose une approche originale et visuelle pour modéliser l'évolution du prix d'un actif financier en utilisant les processus mathématiques de la mécanique quantique. Le prix de l'actif (action, or, etc.) est représenté par un paquet d'ondes de probabilités qui évolue au cours du temps face à des "barrières de potentiel", représentant les niveaux de support et de résistance du marché boursier.
 
-## Fonctionnalités Principales
+## 🚀 Fonctionnalités Principales
 
-1. **Initialisation des Paramètres** : Télécharge automatiquement les données historiques récentes d'une action (via `yfinance`) pour calculer sa volatilité intrinsèque et son drift (tendance).
-2. **Création du Paquet d'Ondes** : Génère une fonction d'onde initiale (gaussienne) centrée sur le prix actuel de l'action.
-3. **Construction du Hamiltonien** : Intègre l'énergie cinétique (basée sur la volatilité du marché) et crée des barrières de potentiel modélisant les zones de résistance ou de support.
-4. **Évolution Temporelle (Crank-Nicolson)** : Fait évoluer la fonction d'onde de manière stable dans le temps pour observer comment la probabilité du prix se déplace et interagit avec les obstacles.
-5. **Visualisation Interactive** : Affiche une animation en temps réel de la densité de probabilité du prix de l'action frappant les barrières de résistance, avec le calcul dynamique des probabilités de "breakout" (cassure de résistance).
+- **Initialisation dynamique** : Modélisation des rendements historiques d'un actif via l'API `yfinance` pour extraire la volatilité (dispersion) et le drift (tendance directionnelle).
+- **Processus quantique (Équation de Schrödinger)** : Implémentation du Hamiltonien avec énergie cinétique (basée sur la volatilité) et création de puits et barrières de potentiel.
+- **Résolution Numérique Spatio-Temporelle** : Utilisation de la modélisation différentielle implicite (Méthode de Crank-Nicolson) pour faire évoluer le système de façon stable.
+- **Visualisations Interactives & Statiques** : Animations en temps réel de la densité de probabilité se fracassant sur les résistances et graphiques comparatifs mettant en évidence les effets d'accumulation et d'effet tunnel probabiliste.
 
-## Prérequis
+## 📁 Architecture du Projet
 
-Assurez-vous d'avoir installé les bibliothèques Python suivantes :
+Le projet a évolué et intègre désormais trois cas d'usage démontrant la puissance de l'outil :
+
+1. `main.py` : **Simulateur Standard Interactif**
+   C'est le module racine de l'application (historiquement exécuté sur l'actif `SPY`). Il calcule la fonction d'onde, gère l'animation de l'évolution des densités de probabilités en temps réel et détecte les franchissements de niveau (breakouts).
+2. `Comparaison.py` : **Étude d'Impact des Barrières de Résistances**
+   Permet d'exécuter la simulation sous deux univers parallèles : le modèle probabiliste lisse avec et sans les perturbations induites par les limites boursières. Le script génère un magnifique visuel statique comparatif illustrant ce que permettent vos barrières (création visuelle d'un rebond) et le calcul "d'effet tunnel" induit par le bris de confiance du marché.
+3. `Gold.py` : **Test Chronologique Rétrospectif sur l'Or (`GC=F`)**
+   Isole l'entraînement des données du Hamiltonien (2020-2023) pour tester le paquet d'ondes dans le futur (2023). Superpose le *prix réel historique* de l'actif en overlay de l'animation probabilisée quantique.
+
+## 🛠️ Prérequis et Installation
+
+Assurez-vous de disposer de Python 3.8+ et installez les dépendances nécessaires présentes au projet :
 
 ```bash
-pip install numpy matplotlib yfinance scipy datetime
+# Installation recommandée via le nouveau fichier de référence
+pip install -r requirements.txt
 ```
+*(Alternative manual) : `pip install numpy matplotlib yfinance scipy`*
 
-## Utilisation
 
-Pour lancer la simulation, exécutez simplement le script `main.py` :
+## 💻 Utilisation
 
+### Lancer la simulation de base (Animation Continue)
 ```bash
 python main.py
 ```
 
-### Configuration des paramètres
+### Lancer la démonstration de l'effet des barrières (Graphique Comparatif)
+```bash
+python Comparaison.py
+```
 
-Vous pouvez modifier les paramètres de la simulation directement à la fin du fichier `main.py` dans le bloc `if __name__ == "__main__":` :
+### Lancer le backtest sur l'Or en lien avec le prix historique
+```bash
+python Gold.py
+```
 
-- `action` : Le symbole boursier (ticker) de l'action à analyser (par défaut `"SPY"`).
-- `resistance_price_val` : Liste des prix où se situent les barrières de résistance.
-- `barrier_thickness` : L'épaisseur (en log-prix) de chaque barrière.
-- `potential_strength` : La force ou "hauteur" de chaque barrière de potentiel.
-- `time_step` (`dt`) : Le pas de temps pour l'évolution de la simulation.
-- `num_iterations` : Le nombre total d'itérations de la simulation.
+### Configuration des Paramètres
+Dans chacun de ces scripts d’exécution (sous le bloc conditionnel de lancement standard `if __name__ == "__main__":`), de nombreuses constantes algorithmiques sont paramétrables :
+- `action` : Le symbole boursier Yahoo Finance pris pour cible d'étude (ex. "SPY", "GC=F", "AAPL").
+- `resistance_price_val` : Tableau des niveaux de prix symboliques agissant comme points de frictions.
+- `barrier_thickness` : Proportion d'espace du spectre probabilisable accaparé par ladite résistance.
+- `potential_strength` : Un coefficient massique simulant un bouclier ou un rebond plus complexe pour le Hamiltonien.
 
-## Structure du Code
+## 💡 Bonnes pratiques et Mises aux normes (Recommandations Futures)
 
-- `initialize_parameters()` : Calcule les paramètres physiques de l'action (masse relative à l'inertie, drift `k_0`, volatilité `v_0`) depuis l'API Yahoo Finance.
-- `create_initial_wave_packet()` : Construit l'état quantique initial du marché sous forme de cloche de Gauss.
-- `build_hamiltonian()` : Génère l'opérateur d'énergie totale, définissant les zones où le prix aura de la difficulté à passer (les résistances).
-- `run_simulation_and_animate()` : Cœur de la simulation. Résout l'équation de Schrödinger dépendante du temps par la méthode des différences finies (Crank-Nicolson) et met à jour le graphique animé.
+Pour poursuivre la transformation professionnelle de cette plateforme analytique quantique vers des « standards de l'industrie technologique », voici plusieurs initiatives logicielles qui pourraient être appliquées à l'avenir :
 
-## Avertissement
+1. **Modularisation et Extraction de Bibliothèque** : Actuellement, des fonctions comme `create_initial_wave_packet` ou `build_hamiltonian` sont dans `main.py`, puis importées laborieusement (`import main`) par d'autres scripts. ➡️ *Idéal : Placer ces logiques complexes dans un sous-dossier `core/` ou `physics_engine.py` dédié uniquement aux mathématiques.*
+2. **Centraliser la Configuration Boursière** : Gérer les données de la variable `barrier_thickness` ou `resistance_price_val` au moyen d'un fichier externe tel qu'un environnement YAML (`config.yaml`) ou JSON pour découpler la donnée simulée de la formulation logicielle métier.
+3. **Journalisation Applicative (Logs)** : Substituer l'instruction `print()` par l'utilisation de la bibliothèque officielle de traçabilité `logging` en Python, ceci permet un archivage sécuritaire de la donnée exécutive du produit.
+4. **Validation de Qualité (Typage)** : Documenter avec plus d'exactitude les signatures, par l'utilisation du *Type Hinting*, ex: `def fast_simulation(psi: np.ndarray, dt: float) -> np.ndarray:`.
 
-Ce projet est une expérimentation théorique et mathématique visant à appliquer des concepts de physique quantique à la finance. **Il ne constitue en aucun cas un outil de conseil financier ou d'aide à l'investissement.**
+## ⚠️ Avertissement
+
+Le déploiement de ces éléments informatiques correspond à une ingénierie mathématique et théorique pure. **Il ne représente aucune garantie, ne saurait faire l'objet de prévisions assurées et n'implique ni conseil patrimonial ni recommandation avisée d'investissement.**

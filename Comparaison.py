@@ -1,26 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.linalg import solve_banded
-import main
-
-def fast_simulation(psi, K_coeff, dt, S, potential_vector):
-    """ Exécute la simulation rapidement sans animation pour comparaison """
-    alpha = 1j * dt / 2 # On calcule alpha
-    H_diag = -potential_vector + K_coeff * (-2) # On calcule H_diag
-    diag_main_ML = 1 + alpha * H_diag # On calcule diag_main_ML
-    diag_off_ML = alpha * K_coeff # On calcule diag_off_ML
-    M_L_banded = np.zeros((3, len(psi)), dtype=complex) # On crée M_L_banded
-    M_L_banded[0, 1:] = diag_off_ML # On ajoute diag_off_ML
-    M_L_banded[1, :] = diag_main_ML # On ajoute diag_main_ML
-    M_L_banded[2, :-1] = diag_off_ML # On ajoute diag_off_ML
-
-    for i in range(S):
-        term_H_psi = H_diag * psi # On calcule H*psi
-        term_H_psi[1:] += K_coeff * psi[:-1] # On ajoute K*psi
-        term_H_psi[:-1] += K_coeff * psi[1:] # On ajoute K*psi
-        B = psi - alpha * term_H_psi # On calcule B
-        psi = solve_banded((1, 1), M_L_banded, B) # On résout l'équation
-    return psi
+import quantum_engine as qe
 
 def plot_barrier_impact(psi_no_barrier, x_no_barrier, psi_with_barrier, x_with_barrier, resistance_prices):
     """ Génère un beau graphique comparatif de l'impact de la barrière """
@@ -86,7 +66,7 @@ if __name__ == "__main__":
     # Paramètres de test (SPY)
     action = "SPY"
     # On initialise d'abord sans résistances pour obtenir le initial_price
-    params = main.initialize_parameters(num_points, action)
+    params = qe.initialize_parameters(num_points, action)
     x_0, x, dx, mass, initial_drift, initial_volatility, initial_price, real_prices, real_times = params
 
     # Création d'une grille PLUS LARGE pour la simulation sans barrière (éviter la réflexion aux limites)
@@ -102,24 +82,24 @@ if __name__ == "__main__":
     potential_strength = [29, 18, 38, 20]
 
     # 2. Création des fonctions d'ondes initiales
-    psi_initial = main.create_initial_wave_packet(x, x_0, initial_volatility, initial_drift)
-    psi_initial_wide = main.create_initial_wave_packet(x_wide, x_0, initial_volatility, initial_drift)
+    psi_initial = qe.create_initial_wave_packet(x, x_0, initial_volatility, initial_drift)
+    psi_initial_wide = qe.create_initial_wave_packet(x_wide, x_0, initial_volatility, initial_drift)
 
     # 3. Hamiltonien AVEC barrière (sur la grille standard)
-    K_coeff, potential_vector_barrier = main.build_hamiltonian(num_points, dx, mass, x, resistance_price_val,
+    K_coeff, potential_vector_barrier = qe.build_hamiltonian(num_points, dx, mass, x, resistance_price_val,
                                                           potential_strength, barrier_thickness)
 
     # 4. Hamiltonien SANS barrière (sur la grille large)
-    K_coeff_wide, potential_vector_no_barrier = main.build_hamiltonian(num_points, dx_wide, mass, x_wide, [], [], [])
+    K_coeff_wide, potential_vector_no_barrier = qe.build_hamiltonian(num_points, dx_wide, mass, x_wide, [], [], [])
 
     print("Calcul du modèle classique avec la simulation rapide...")
     # Simulation rapide SANS barrière
-    psi_final_no_barrier = fast_simulation(psi_initial_wide.copy(), K_coeff_wide, time_step, num_iterations,
+    psi_final_no_barrier = qe.fast_simulation(psi_initial_wide.copy(), K_coeff_wide, time_step, num_iterations,
                                            potential_vector_no_barrier)
 
     print("Lancement de l'animation quantique avec barrière...")
     # Simulation animée AVEC barrière
-    psi_final_with_barrier = main.run_simulation_and_animate(psi_initial.copy(), K_coeff, time_step, num_iterations, x,
+    psi_final_with_barrier = qe.run_simulation_and_animate(psi_initial.copy(), K_coeff, time_step, num_iterations, x,
                                                         potential_vector_barrier,
                                                         update_frequency, resistance_price_val, barrier_thickness,
                                                         initial_volatility, initial_drift, real_prices, real_times)
