@@ -4,6 +4,8 @@
 
 This project offers an original and visual approach to modeling the evolution of financial asset prices using mathematical processes from quantum mechanics. The asset's price (stock, gold, etc.) is represented as a probability wave packet that evolves over time against "potential barriers" representing stock market support and resistance levels.
 
+![Quantum evolution simulation of an asset](assets/Simulation.png)
+
 ##  Key Features
 
 - **Dynamic Initialization**: Models historical asset returns via the `yfinance` API to extract volatility (dispersion) and drift (directional trend).
@@ -21,6 +23,8 @@ The project is built around a mathematical core and three distinct entry scripts
    The basic entry point (configured for `SPY`). It calls the engine to animate the evolution of probability densities in real-time and detect breakouts.
 3. `Comparaison.py`: **Resistance Barrier Impact Study**
    This script runs the simulation in two parallel universes: a smooth probabilistic model with and without market barriers. It generates a comparative visual illustrating the "bounce" creation and "tunneling effect" calculation.
+   
+   ![Comparison between standard and quantum model with barrier](assets/Comparaison.png)
 4. `Gold.py`: **Retrospective Backtest on Gold (`GC=F`)**
    Splits historical data (2020-2023) to test the probabalistic projection (2023). The script runs the engine on Gold and overlays the *actual historical price* on the animation to evaluate the Hamiltonian's predictive capability.
 

@@ -4,6 +4,8 @@
 
 Ce projet propose une approche originale et visuelle pour modéliser l'évolution du prix d'un actif financier en utilisant les processus mathématiques de la mécanique quantique. Le prix de l'actif (action, or, etc.) est représenté par un paquet d'ondes de probabilités qui évolue au cours du temps face à des "barrières de potentiel", représentant les niveaux de support et de résistance du marché boursier.
 
+![Simulation de l'évolution quantique d'un actif](assets/Simulation.png)
+
 ##  Fonctionnalités Principales
 
 - **Initialisation dynamique** : Modélisation des rendements historiques d'un actif via l'API `yfinance` pour extraire la volatilité (dispersion) et le drift (tendance directionnelle).
@@ -21,6 +23,8 @@ Le projet est architecturé autour d'un cœur mathématique et de trois scripts 
    C'est le point de lancement basique (configuré sur `SPY`). Il appelle le moteur pour animer l'évolution des densités de probabilités en temps réel et détecter les franchissements (breakouts).
 3. `Comparaison.py` : **Étude d'Impact des Barrières de Résistances**
    Ce script exploite le moteur pour exécuter la simulation sous deux univers parallèles : le modèle probabiliste lisse avec et sans les barrières de limites boursières. Il génère un visuel comparatif illustrant la création du "rebond" et du calcul "d'effet tunnel".
+   
+   ![Comparaison entre modèle classique et quantique avec barrière](assets/Comparaison.png)
 4. `Gold.py` : **Test Chronologique Rétrospectif sur l'Or (`GC=F`)**
    Sépare les données historiques (2020-2023) pour tester la projection probabilisée (2023). Le script lance le moteur sur l'Or et superpose le *prix réel historique* en overlay de l'animation pour évaluer la capacité prédictive du Hamiltonien.
 
