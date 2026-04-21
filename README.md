@@ -1,63 +1,64 @@
-# Simulateur de Prix d'Action par Mécanique Quantique (PI)
+*Read this in other languages: [Français](README.fr.md)*
 
-Ce projet propose une approche originale et visuelle pour modéliser l'évolution du prix d'un actif financier en utilisant les processus mathématiques de la mécanique quantique. Le prix de l'actif (action, or, etc.) est représenté par un paquet d'ondes de probabilités qui évolue au cours du temps face à des "barrières de potentiel", représentant les niveaux de support et de résistance du marché boursier.
+# Quantum Stock Simulator
 
-## 🚀 Fonctionnalités Principales
+This project offers an original and visual approach to modeling the evolution of financial asset prices using mathematical processes from quantum mechanics. The asset's price (stock, gold, etc.) is represented as a probability wave packet that evolves over time against "potential barriers" representing stock market support and resistance levels.
 
-- **Initialisation dynamique** : Modélisation des rendements historiques d'un actif via l'API `yfinance` pour extraire la volatilité (dispersion) et le drift (tendance directionnelle).
-- **Processus quantique (Équation de Schrödinger)** : Implémentation du Hamiltonien avec énergie cinétique (basée sur la volatilité) et création de puits et barrières de potentiel.
-- **Résolution Numérique Spatio-Temporelle** : Utilisation de la modélisation différentielle implicite (Méthode de Crank-Nicolson) pour faire évoluer le système de façon stable.
-- **Visualisations Interactives & Statiques** : Animations en temps réel de la densité de probabilité se fracassant sur les résistances et graphiques comparatifs mettant en évidence les effets d'accumulation et d'effet tunnel probabiliste.
+##  Key Features
 
-## 📁 Architecture du Projet
+- **Dynamic Initialization**: Models historical asset returns via the `yfinance` API to extract volatility (dispersion) and drift (directional trend).
+- **Quantum Process (Schrödinger Equation)**: Implementation of the Hamiltonian with kinetic energy (based on volatility) and creation of potential wells and barriers.
+- **Spatio-Temporal Numerical Resolution**: Uses implicit differential modeling (Crank-Nicolson method) for stable system evolution.
+- **Interactive & Static Visualizations**: Real-time animations of probability density crashing against resistances and comparative charts highlighting accumulation effects and probabilistic quantum tunneling.
 
-Le projet est architecturé autour d'un cœur mathématique et de trois scripts d'entrée distincts qui l'exploitent :
+##  Project Architecture
 
-1. `quantum_engine.py` : **Le Cœur du Moteur Quantique**
-   C'est la bibliothèque contenant les fonctions fondamentales : méthodes mathématiques (Crank-Nicolson), création de la matrice du Hamiltonien, génération des paquets d'ondes et interface de rendu d'animation. Les scripts ci-dessous s'en servent comme socle.
-2. `main.py` : **Simulateur Standard Interactif**
-   C'est le point de lancement basique (configuré sur `SPY`). Il appelle le moteur pour animer l'évolution des densités de probabilités en temps réel et détecter les franchissements (breakouts).
-3. `Comparaison.py` : **Étude d'Impact des Barrières de Résistances**
-   Ce script exploite le moteur pour exécuter la simulation sous deux univers parallèles : le modèle probabiliste lisse avec et sans les barrières de limites boursières. Il génère un visuel comparatif illustrant la création du "rebond" et du calcul "d'effet tunnel".
-4. `Gold.py` : **Test Chronologique Rétrospectif sur l'Or (`GC=F`)**
-   Sépare les données historiques (2020-2023) pour tester la projection probabilisée (2023). Le script lance le moteur sur l'Or et superpose le *prix réel historique* en overlay de l'animation pour évaluer la capacité prédictive du Hamiltonien.
+The project is built around a mathematical core and three distinct entry scripts that utilize it:
 
-## 🛠️ Prérequis et Installation
+1. `quantum_engine.py`: **The Core Quantum Engine**
+   This is the library containing fundamental functions: mathematical methods (Crank-Nicolson), Hamiltonian matrix creation, wave packet generation, and animation rendering interface. The scripts below use it as a foundation.
+2. `main.py`: **Standard Interactive Simulator**
+   The basic entry point (configured for `SPY`). It calls the engine to animate the evolution of probability densities in real-time and detect breakouts.
+3. `Comparaison.py`: **Resistance Barrier Impact Study**
+   This script runs the simulation in two parallel universes: a smooth probabilistic model with and without market barriers. It generates a comparative visual illustrating the "bounce" creation and "tunneling effect" calculation.
+4. `Gold.py`: **Retrospective Backtest on Gold (`GC=F`)**
+   Splits historical data (2020-2023) to test the probabalistic projection (2023). The script runs the engine on Gold and overlays the *actual historical price* on the animation to evaluate the Hamiltonian's predictive capability.
 
-Assurez-vous de disposer de Python 3.8+ et installez les dépendances nécessaires présentes au projet :
+##  Prerequisites and Installation
+
+Ensure you have Python 3.8+ installed, then install the required dependencies:
 
 ```bash
-# Installation recommandée via le nouveau fichier de référence
 pip install -r requirements.txt
 ```
-*(Alternative manual) : `pip install numpy matplotlib yfinance scipy`*
+*(Manual alternative): `pip install numpy matplotlib yfinance scipy`*
 
 
-## 💻 Utilisation
+##  Usage
 
-### Lancer la simulation de base (Animation Continue)
+### Run the base simulation (Continuous Animation)
 ```bash
 python main.py
 ```
 
-### Lancer la démonstration de l'effet des barrières (Graphique Comparatif)
+### Run the barrier effect demonstration (Comparative Chart)
 ```bash
 python Comparaison.py
 ```
 
-### Lancer le backtest sur l'Or en lien avec le prix historique
+### Run the Gold backtest with historical prices
 ```bash
 python Gold.py
 ```
 
-### Configuration des Paramètres
-Dans chacun de ces scripts d’exécution (sous le bloc conditionnel de lancement standard `if __name__ == "__main__":`), de nombreuses constantes algorithmiques sont paramétrables :
-- `action` : Le symbole boursier Yahoo Finance pris pour cible d'étude (ex. "SPY", "GC=F", "AAPL").
-- `resistance_price_val` : Tableau des niveaux de prix symboliques agissant comme points de frictions.
-- `barrier_thickness` : Proportion d'espace du spectre probabilisable accaparé par ladite résistance.
-- `potential_strength` : Un coefficient massique simulant un bouclier ou un rebond plus complexe pour le Hamiltonien.
+### Parameter Configuration
+In each execution script (under the standard `if __name__ == "__main__":` block), several algorithmic constants can be tuned:
+- `action`: The Yahoo Finance ticker symbol studied (e.g., "SPY", "GC=F", "AAPL").
+- `resistance_price_val`: Array of symbolic price levels acting as friction points.
+- `barrier_thickness`: The proportion of the probabilistic space taken up by the resistance.
+- `potential_strength`: A mass coefficient simulating a shield or complex bounce for the Hamiltonian.
 
 
-## ⚠️ Avertissement
+## ⚠️ Disclaimer
 
-Le déploiement de ces éléments informatiques correspond à une ingénierie mathématique et théorique pure. **Il ne représente aucune garantie, ne saurait faire l'objet de prévisions assurées et n'implique ni conseil patrimonial ni recommandation avisée d'investissement.**
+This theoretical and mathematical engineering model is for educational and research purposes only. **It provides no guarantees, should not be relied upon for certain forecasts, and does not constitute financial advice or investment recommendations.**

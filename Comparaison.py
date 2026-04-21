@@ -59,7 +59,7 @@ def plot_barrier_impact(psi_no_barrier, x_no_barrier, psi_with_barrier, x_with_b
 if __name__ == "__main__":
     # Modifions les paramètres pour que ça tourne en un temps raisonnable
     time_step = 0.01
-    num_iterations = 50000
+    num_iterations = 5000
     update_frequency = 100
     num_points = 50000
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     dx_wide = x_wide[1] - x_wide[0]
 
     # Définition d'une résistance pour illustrer votre valeur ajoutée
-    resistance_price_val = [600, 640, 690, 720]
+    resistance_price_val = [600, 620, 690, 720]
     barrier_thickness = [6, 3, 2.5, 3]
     potential_strength = [29, 18, 38, 20]
 

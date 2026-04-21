@@ -2,4 +2,3 @@ numpy
 matplotlib
 yfinance
 scipy
-datetime
