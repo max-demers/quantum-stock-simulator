@@ -57,13 +57,6 @@ Dans chacun de ces scripts d’exécution (sous le bloc conditionnel de lancemen
 - `barrier_thickness` : Proportion d'espace du spectre probabilisable accaparé par ladite résistance.
 - `potential_strength` : Un coefficient massique simulant un bouclier ou un rebond plus complexe pour le Hamiltonien.
 
-## 💡 Bonnes pratiques et Mises aux normes (Recommandations Futures)
-
-Pour poursuivre la transformation professionnelle de cette plateforme analytique quantique vers des « standards de l'industrie technologique », voici plusieurs initiatives logicielles qui pourraient être appliquées à l'avenir :
-
-1. **Centraliser la Configuration Boursière** : Gérer les données de la variable `barrier_thickness` ou `resistance_price_val` au moyen d'un fichier externe tel qu'un environnement YAML (`config.yaml`) ou JSON pour découpler la donnée simulée de la formulation logicielle métier.
-2. **Journalisation Applicative (Logs)** : Substituer l'instruction `print()` par l'utilisation de la bibliothèque officielle de traçabilité `logging` en Python, ceci permet un archivage sécuritaire de la donnée exécutive du produit.
-3. **Validation de Qualité (Typage)** : Documenter avec plus d'exactitude les signatures, par l'utilisation du *Type Hinting*, ex: `def fast_simulation(psi: np.ndarray, dt: float) -> np.ndarray:`.
 
 ## ⚠️ Avertissement
 
