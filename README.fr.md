@@ -2,6 +2,8 @@
 
 # Simulateur de Prix d'Action par Mécanique Quantique (PI)
 
+*Ce projet a été réalisé dans le cadre du cours "Projet d'Intégration" (Mathématiques en Sciences de la Nature) au Cégep.*
+
 Ce projet propose une approche originale et visuelle pour modéliser l'évolution du prix d'un actif financier en utilisant les processus mathématiques de la mécanique quantique. Le prix de l'actif (action, or, etc.) est représenté par un paquet d'ondes de probabilités qui évolue au cours du temps face à des "barrières de potentiel", représentant les niveaux de support et de résistance du marché boursier.
 
 ![Simulation de l'évolution quantique d'un actif](assets/Simulation.png)

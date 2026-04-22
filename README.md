@@ -2,6 +2,8 @@
 
 # Quantum Stock Simulator
 
+*This project was developed as part of the "Integration Project" course (Mathematics in Natural Sciences) at CEGEP.*
+
 This project offers an original and visual approach to modeling the evolution of financial asset prices using mathematical processes from quantum mechanics. The asset's price (stock, gold, etc.) is represented as a probability wave packet that evolves over time against "potential barriers" representing stock market support and resistance levels.
 
 ![Quantum evolution simulation of an asset](assets/Simulation.png)
